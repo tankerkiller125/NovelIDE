@@ -102,12 +102,15 @@ type StatusChange struct {
 // CodexEntry is one entity in the codex, stored as a YAML file. Type is a
 // type id from the workspace schema; entries live under codex/<type>/.
 type CodexEntry struct {
-	ID        string            `yaml:"id" json:"id"`
-	Name      string            `yaml:"name" json:"name"`
-	Type      string            `yaml:"type" json:"type"`
-	Aliases   []string          `yaml:"aliases,omitempty" json:"aliases"`
-	Summary   string            `yaml:"summary,omitempty" json:"summary"`
-	Details   string            `yaml:"details,omitempty" json:"details"` // markdown body
+	ID      string   `yaml:"id" json:"id"`
+	Name    string   `yaml:"name" json:"name"`
+	Type    string   `yaml:"type" json:"type"`
+	Aliases []string `yaml:"aliases,omitempty" json:"aliases"`
+	Summary string   `yaml:"summary,omitempty" json:"summary"`
+	Details string   `yaml:"details,omitempty" json:"details"` // markdown body
+	// Image is a workspace-relative path to a portrait/map (e.g.
+	// "assets/aria-voss.png"), copied into the workspace when set.
+	Image     string            `yaml:"image,omitempty" json:"image"`
 	Fields    map[string]string `yaml:"fields,omitempty" json:"fields"`
 	Status    []StatusChange    `yaml:"status,omitempty" json:"status"`
 	Relations []Relation        `yaml:"relations,omitempty" json:"relations"`

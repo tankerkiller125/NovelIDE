@@ -18,6 +18,7 @@ const form = reactive({
   lineNumbers: false,
   spellcheck: true,
   spellcheckLang: '',
+  livePreview: true,
 })
 const saving = ref(false)
 const message = ref('')
@@ -52,6 +53,7 @@ async function load() {
   form.lineNumbers = s.editorLineNumbers
   form.spellcheck = s.editorSpellcheck
   form.spellcheckLang = s.spellcheckLang
+  form.livePreview = !s.editorRawMarkup
 }
 watch(() => state.settings, load, { immediate: true })
 
@@ -78,6 +80,7 @@ async function save() {
       editorLineHeight: form.lineHeight,
       editorLineNumbers: form.lineNumbers,
       editorSpellcheck: form.spellcheck,
+      editorRawMarkup: !form.livePreview,
       spellcheckLang: form.spellcheckLang.trim(),
       recent: state.settings?.recent ?? [],
     })
@@ -154,6 +157,11 @@ async function save() {
       <label class="inline check">
         <input type="checkbox" v-model="form.lineNumbers" />
         Show line numbers
+      </label>
+      <label class="inline check">
+        <input type="checkbox" v-model="form.livePreview" />
+        Live Markdown preview
+        <span class="hint">render **bold**, *italic*, headings &amp; `code` inline; markers reappear when the cursor is on them</span>
       </label>
       <label class="inline check">
         <input type="checkbox" v-model="form.spellcheck" />

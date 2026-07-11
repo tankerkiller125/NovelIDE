@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import SidebarTrees from './SidebarTrees.vue'
+import StatusBar from './StatusBar.vue'
 import ChapterEditor from './ChapterEditor.vue'
 import CodexEditor from './CodexEditor.vue'
 import SchemaEditor from './SchemaEditor.vue'
 import SettingsEditor from './SettingsEditor.vue'
 import PlanView from './PlanView.vue'
 import SeriesPlanView from './SeriesPlanView.vue'
+import ExportView from './ExportView.vue'
+import GraphView from './GraphView.vue'
+import CorkboardView from './CorkboardView.vue'
+import TimelineView from './TimelineView.vue'
+import SearchView from './SearchView.vue'
+import HistoryView from './HistoryView.vue'
 import { SaveCodexEntry } from '../api'
 import {
   activateTab,
@@ -44,6 +51,15 @@ function tabLabel(t: Tab): string {
     return `Plan: ${b?.title ?? t.bookId}`
   }
   if (t.kind === 'series-plan') return 'Series Plan'
+  if (t.kind === 'export') return 'Export'
+  if (t.kind === 'graph') return 'Graph'
+  if (t.kind === 'corkboard') {
+    const b = (state.workspace?.books ?? []).find((b) => b.id === t.bookId)
+    return `Corkboard: ${b?.title ?? t.bookId}`
+  }
+  if (t.kind === 'timeline') return 'Timeline'
+  if (t.kind === 'search') return 'Search'
+  if (t.kind === 'history') return 'History'
   if (!t.entryId) return 'New entry'
   return codexById.value.get(t.entryId)?.name ?? t.entryId
 }
@@ -52,6 +68,12 @@ function tabIcon(t: Tab): string {
   if (t.kind === 'chapter') return '📄'
   if (t.kind === 'schema' || t.kind === 'settings') return '⚙'
   if (t.kind === 'plan' || t.kind === 'series-plan') return '📋'
+  if (t.kind === 'export') return '⬇'
+  if (t.kind === 'graph') return '🕸'
+  if (t.kind === 'corkboard') return '🗂'
+  if (t.kind === 'timeline') return '🕰'
+  if (t.kind === 'search') return '🔍'
+  if (t.kind === 'history') return '🕓'
   return '📔'
 }
 
@@ -98,6 +120,7 @@ async function acceptSuggestion(s: Suggestion) {
         aliases: [],
         summary: '',
         details: '',
+        image: '',
         fields: {},
         status: [],
         relations: [],
@@ -147,11 +170,22 @@ function dismissSuggestion(s: Suggestion) {
 function jumpToFlag(pos: number) {
   editorRef.value?.jumpTo(pos)
 }
+
+function onKey(e: KeyboardEvent) {
+  if (e.ctrlKey && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+    e.preventDefault()
+    state.focusMode = !state.focusMode
+  } else if (e.key === 'Escape' && state.focusMode) {
+    state.focusMode = false
+  }
+}
+onMounted(() => window.addEventListener('keydown', onKey))
+onUnmounted(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
   <div class="shell">
-    <SidebarTrees />
+    <SidebarTrees v-if="!state.focusMode" />
     <main class="main">
       <div class="tabbar" v-if="state.tabs.length">
         <div
@@ -201,6 +235,16 @@ function jumpToFlag(pos: number) {
           :book-id="activeTabObj.bookId"
         />
         <SeriesPlanView v-else-if="activeTabObj?.kind === 'series-plan'" />
+        <ExportView v-else-if="activeTabObj?.kind === 'export'" />
+        <GraphView v-else-if="activeTabObj?.kind === 'graph'" />
+        <CorkboardView
+          v-else-if="activeTabObj?.kind === 'corkboard'"
+          :key="tabKey(activeTabObj)"
+          :book-id="activeTabObj.bookId"
+        />
+        <TimelineView v-else-if="activeTabObj?.kind === 'timeline'" />
+        <SearchView v-else-if="activeTabObj?.kind === 'search'" />
+        <HistoryView v-else-if="activeTabObj?.kind === 'history'" />
         <div v-else class="empty">
           <p>Open a chapter from the Manuscript tree, or a Codex entry.</p>
           <p class="empty-hint">
@@ -209,7 +253,11 @@ function jumpToFlag(pos: number) {
         </div>
       </div>
 
-      <div v-if="activeChapterTab" class="problems" :class="{ open: problemsOpen }">
+      <div
+        v-if="activeChapterTab && !state.focusMode"
+        class="problems"
+        :class="{ open: problemsOpen }"
+      >
         <div class="problems-head" @click="problemsOpen = !problemsOpen">
           <span class="chev">{{ problemsOpen ? '▾' : '▸' }}</span>
           Consistency
@@ -269,6 +317,8 @@ function jumpToFlag(pos: number) {
           </div>
         </div>
       </div>
+
+      <StatusBar />
     </main>
   </div>
 </template>

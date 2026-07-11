@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { DeleteCodexEntry, SaveCodexEntry } from '../api'
+import { Backlinks, ClearEntryImage, DeleteCodexEntry, PickEntryImage, SaveCodexEntry } from '../api'
 import {
   closeTab,
   codexById,
+  imageURL,
   openTab,
   pinActiveTab,
   pinTab,
@@ -13,7 +14,7 @@ import {
   state,
   tabKey,
 } from '../store'
-import type { CodexEntry, Relation, StatusChange } from '../types'
+import type { Backlink, CodexEntry, Relation, StatusChange } from '../types'
 
 const props = defineProps<{ entryId: string; draft?: CodexEntry }>()
 
@@ -25,6 +26,7 @@ function blankEntry(): CodexEntry {
     aliases: [],
     summary: '',
     details: '',
+    image: '',
     fields: {},
     status: [],
     relations: [],
@@ -66,6 +68,30 @@ const form = reactive({
 const saving = ref(false)
 const message = ref('')
 const isNew = computed(() => !props.entryId)
+
+const imageBusy = ref(false)
+const currentImage = computed(() =>
+  original.value?.image ? imageURL(original.value.image) : undefined,
+)
+async function pickImage() {
+  if (!original.value) return
+  imageBusy.value = true
+  try {
+    setWorkspace(await PickEntryImage(original.value))
+  } catch (e) {
+    message.value = `Image failed: ${e}`
+  } finally {
+    imageBusy.value = false
+  }
+}
+async function removeImage() {
+  if (!original.value) return
+  try {
+    setWorkspace(await ClearEntryImage(original.value))
+  } catch (e) {
+    message.value = `Image failed: ${e}`
+  }
+}
 
 function loadForm() {
   const e = original.value ?? blankEntry()
@@ -130,6 +156,31 @@ const incoming = computed(() => {
   return out
 })
 
+// Manuscript backlinks: chapters that actually mention this entity. Loaded
+// lazily and re-fetched when the entry changes or its name/aliases are saved.
+const backlinks = ref<Backlink[]>([])
+const backlinksLoading = ref(false)
+async function loadBacklinks() {
+  const id = original.value?.id
+  if (!id) {
+    backlinks.value = []
+    return
+  }
+  backlinksLoading.value = true
+  try {
+    backlinks.value = await Backlinks(id)
+  } catch (e) {
+    console.error('backlinks failed', e)
+    backlinks.value = []
+  } finally {
+    backlinksLoading.value = false
+  }
+}
+watch(() => [props.entryId, original.value?.aliases?.join(','), original.value?.name], loadBacklinks, {
+  immediate: true,
+})
+const backlinkTotal = computed(() => backlinks.value.reduce((n, b) => n + b.count, 0))
+
 function addField(key = '') {
   form.fields.push({ key, value: '' })
 }
@@ -170,6 +221,7 @@ async function save() {
       .filter(Boolean),
     summary: form.summary,
     details: form.details,
+    image: old?.image ?? '', // preserve the portrait across edits
     fields: Object.fromEntries(
       form.fields.filter((f) => f.key.trim()).map((f) => [f.key.trim(), f.value]),
     ),
@@ -238,6 +290,24 @@ async function remove() {
       <span class="ce-msg">{{ message }}</span>
       <button class="btn danger" v-if="!isNew" @click="remove">Delete</button>
       <button class="btn primary" :disabled="saving" @click="save">Save</button>
+    </div>
+
+    <div class="ce-image-row">
+      <div class="ce-image" :class="{ empty: !currentImage }">
+        <img v-if="currentImage" :src="currentImage" :alt="form.name" />
+        <span v-else class="ce-image-ph">No image</span>
+      </div>
+      <div class="ce-image-actions">
+        <template v-if="isNew">
+          <span class="hint">Save the entry first to add an image.</span>
+        </template>
+        <template v-else>
+          <button class="btn" :disabled="imageBusy" @click="pickImage">
+            {{ imageBusy ? 'Adding…' : currentImage ? 'Replace image…' : 'Add image…' }}
+          </button>
+          <button v-if="currentImage" class="btn danger" @click="removeImage">Remove</button>
+        </template>
+      </div>
     </div>
 
     <div class="ce-grid">
@@ -372,6 +442,28 @@ async function remove() {
         <button class="btn icon" @click="form.status.splice(i, 1)">✕</button>
       </div>
     </section>
+
+    <section v-if="!isNew">
+      <div class="ce-sect-head">
+        <h3>
+          Appears in the manuscript
+          <span v-if="backlinkTotal" class="ce-count">{{ backlinkTotal }}</span>
+        </h3>
+      </div>
+      <p v-if="backlinksLoading" class="hint">Scanning chapters…</p>
+      <p v-else-if="!backlinks.length" class="hint">
+        No mentions found yet. The scan matches this entry's name and aliases in the prose.
+      </p>
+      <div v-for="(b, i) in backlinks" :key="i" class="ce-backlink" @click="openTab({ kind: 'chapter', bookId: b.bookId, chapter: b.chapter })">
+        <div class="ce-bl-head">
+          <span class="ce-bl-where">
+            <span v-if="books.length > 1" class="ce-bl-book">{{ b.bookTitle }} · </span>{{ b.chapterTitle }}
+          </span>
+          <span class="ce-bl-count">{{ b.count }}×</span>
+        </div>
+        <p class="ce-bl-snippet">{{ b.snippet }}</p>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -380,6 +472,43 @@ async function remove() {
   height: 100%;
   overflow-y: auto;
   padding: 20px 28px 60px;
+}
+.ce-image-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+.ce-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--nv-bg);
+  border: 1px solid var(--nv-border);
+}
+.ce-image.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+}
+.ce-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ce-image-ph {
+  font-size: 11px;
+  color: var(--nv-faint);
+}
+.ce-image-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
 }
 .ce-toolbar {
   display: flex;
@@ -489,6 +618,52 @@ section {
 .ce-in-target {
   color: var(--nv-accent);
   cursor: pointer;
+}
+.ce-count {
+  font-size: 11px;
+  color: var(--nv-faint);
+  background: var(--nv-panel);
+  border: 1px solid var(--nv-border);
+  border-radius: 8px;
+  padding: 0 7px;
+  margin-left: 6px;
+}
+.ce-backlink {
+  border: 1px solid var(--nv-border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+.ce-backlink:hover {
+  border-color: var(--nv-accent);
+  background: var(--nv-hover);
+}
+.ce-bl-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.ce-bl-where {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.ce-bl-book {
+  color: var(--nv-muted);
+  font-weight: normal;
+  text-transform: none;
+}
+.ce-bl-count {
+  font-size: 11px;
+  color: var(--nv-faint);
+}
+.ce-bl-snippet {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--nv-muted);
+  line-height: 1.4;
 }
 .hint {
   color: var(--nv-faint);

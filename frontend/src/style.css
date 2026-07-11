@@ -123,6 +123,38 @@ textarea {
   text-underline-offset: 3px;
 }
 
+/* ---- Editorial annotations (CriticMarkup) ---- */
+.cm-annot {
+  background: color-mix(in srgb, #e8c368 26%, transparent);
+  border-radius: 2px;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, #e8c368 60%, transparent);
+}
+.cm-note-marker {
+  cursor: help;
+  font-size: 0.85em;
+  vertical-align: baseline;
+  opacity: 0.85;
+}
+.cm-note-marker:hover {
+  opacity: 1;
+}
+.nv-note-card {
+  max-width: 300px;
+}
+.nv-note-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--nv-faint);
+  margin-bottom: 4px;
+}
+.nv-note-text {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--nv-text);
+  white-space: pre-wrap;
+}
+
 /* ---- Spelling tooltip ---- */
 .nv-spell-word {
   font-weight: 700;
@@ -196,6 +228,14 @@ textarea {
   color: var(--nv-faint);
   font-size: 11px;
   margin-bottom: 4px;
+}
+.nv-card-image {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin: 6px 0;
 }
 .nv-card-summary {
   margin: 4px 0 6px;

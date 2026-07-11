@@ -9,6 +9,7 @@ require (
 	github.com/nlpodyssey/cybertron v0.2.1
 	github.com/tsawler/prose/v3 v3.0.0-beta2
 	github.com/wailsapp/wails/v2 v2.13.0
+	github.com/yuin/goldmark v1.8.2
 	gopkg.in/yaml.v3 v3.0.1
 )
 

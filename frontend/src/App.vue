@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import WelcomeScreen from './components/WelcomeScreen.vue'
 import IdeShell from './components/IdeShell.vue'
+import AppModal from './components/AppModal.vue'
 import { GetSettings } from './api'
 import { state } from './store'
 
@@ -17,4 +18,5 @@ onMounted(async () => {
 <template>
   <IdeShell v-if="state.workspace" />
   <WelcomeScreen v-else />
+  <AppModal />
 </template>

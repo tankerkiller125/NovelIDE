@@ -224,6 +224,13 @@ function renderCard(ctx: EntityHoverContext, entryId: string, flags: Flag[]): HT
     aka.textContent = `a.k.a. ${entry.aliases.join(', ')}`
   }
 
+  if (data?.imageUrl) {
+    const img = card.appendChild(document.createElement('img'))
+    img.className = 'nv-card-image'
+    img.src = data.imageUrl
+    img.alt = entry.name
+  }
+
   // Current state at this point in the story — never future knowledge.
   if (data?.state) {
     const st = card.appendChild(document.createElement('div'))

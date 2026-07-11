@@ -2,19 +2,27 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"net/http"
+	"os"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"novelide/internal/deep"
 	"novelide/internal/detect"
+	"novelide/internal/export"
+	"novelide/internal/history"
 	"novelide/internal/match"
 	"novelide/internal/model"
 	"novelide/internal/nlp"
 	"novelide/internal/settings"
 	"novelide/internal/spell"
 	"novelide/internal/spellcheck"
+	"novelide/internal/stats"
 	"novelide/internal/workspace"
 )
 
@@ -141,6 +149,62 @@ func (a *App) SelectFolder(title string) (string, error) {
 	return runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{Title: title})
 }
 
+// ExportThemes lists the available book themes (id/label/description).
+func (a *App) ExportThemes() []export.Theme {
+	return export.BuiltinThemes()
+}
+
+// ExportPreview renders the current workspace to themed HTML for the export
+// preview pane. Always HTML regardless of the target format.
+func (a *App) ExportPreview(opts export.Options) (string, error) {
+	a.mu.RLock()
+	ws := a.ws
+	a.mu.RUnlock()
+	if ws == nil {
+		return "", fmt.Errorf("no workspace open")
+	}
+	opts.Format = export.FormatHTML
+	res, err := export.Export(ws, opts)
+	if err != nil {
+		return "", err
+	}
+	return string(res.Bytes), nil
+}
+
+// ExportSave compiles the workspace to the requested format and writes it to
+// a location the user picks. Returns the saved path, or "" if cancelled.
+func (a *App) ExportSave(opts export.Options) (string, error) {
+	a.mu.RLock()
+	ws := a.ws
+	a.mu.RUnlock()
+	if ws == nil {
+		return "", fmt.Errorf("no workspace open")
+	}
+	res, err := export.Export(ws, opts)
+	if err != nil {
+		return "", err
+	}
+	filter := runtime.FileFilter{DisplayName: "EPUB e-book (*.epub)", Pattern: "*.epub"}
+	if opts.Format == export.FormatHTML {
+		filter = runtime.FileFilter{DisplayName: "HTML (*.html)", Pattern: "*.html"}
+	}
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "Export book",
+		DefaultFilename: res.Filename,
+		Filters:         []runtime.FileFilter{filter},
+	})
+	if err != nil {
+		return "", err
+	}
+	if path == "" {
+		return "", nil // user cancelled
+	}
+	if err := os.WriteFile(path, res.Bytes, 0o644); err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
 // CreateWorkspace initializes a new novel or series at path.
 func (a *App) CreateWorkspace(path, name, kind string) (*model.Workspace, error) {
 	ws, err := workspace.Create(path, name, model.WorkspaceKind(kind))
@@ -224,6 +288,59 @@ func (a *App) DeleteCodexEntry(entry model.CodexEntry) (*model.Workspace, error)
 	return a.reload()
 }
 
+// PickEntryImage opens a file dialog, copies the chosen image into the
+// workspace, records it on the entry, and returns the refreshed workspace.
+// Cancelling leaves the workspace unchanged.
+func (a *App) PickEntryImage(entry model.CodexEntry) (*model.Workspace, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	src, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Choose an image",
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Images", Pattern: "*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp"},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if src == "" {
+		return a.reload() // cancelled — return the current workspace
+	}
+	if err := workspace.SetEntryImage(path, &entry, src); err != nil {
+		return nil, err
+	}
+	return a.reload()
+}
+
+// ClearEntryImage removes an entry's image and returns the refreshed workspace.
+func (a *App) ClearEntryImage(entry model.CodexEntry) (*model.Workspace, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	if err := workspace.ClearEntryImage(path, &entry); err != nil {
+		return nil, err
+	}
+	return a.reload()
+}
+
+// ReadImageDataURL reads a workspace-relative image and returns it as a
+// base64 data URL for display in the webview.
+func (a *App) ReadImageDataURL(rel string) (string, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return "", err
+	}
+	b, err := workspace.ReadImage(path, rel)
+	if err != nil {
+		return "", err
+	}
+	mime := http.DetectContentType(b)
+	return "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(b), nil
+}
+
 // ReadChapter returns a chapter's markdown content.
 func (a *App) ReadChapter(bookID, chapter string) (string, error) {
 	path, err := a.workspacePath()
@@ -239,7 +356,22 @@ func (a *App) SaveChapter(bookID, chapter, content string) error {
 	if err != nil {
 		return err
 	}
-	return workspace.WriteChapter(path, bookID, chapter, content)
+	if err := workspace.WriteChapter(path, bookID, chapter, content); err != nil {
+		return err
+	}
+	a.maybeAutoSnapshot(path)
+	return nil
+}
+
+// maybeAutoSnapshot takes an automatic snapshot at most once per day, as a
+// safety net beneath the author's manual snapshots. Best-effort: a failure
+// here never blocks a save.
+func (a *App) maybeAutoSnapshot(wsPath string) {
+	now := time.Now()
+	if history.LatestIsFromDay(wsPath, now) {
+		return
+	}
+	_, _, _ = history.Create(wsPath, "", true, now)
 }
 
 // CreateChapter adds a chapter to a book and returns the refreshed workspace
@@ -275,6 +407,109 @@ func (a *App) CreateBook(title string) (*model.Workspace, error) {
 		return nil, err
 	}
 	return a.reload()
+}
+
+// RenameChapterResult returns the refreshed workspace plus the chapter's new
+// filename (so the frontend can re-point an open tab).
+type RenameChapterResult struct {
+	Workspace *model.Workspace `json:"workspace"`
+	Chapter   string           `json:"chapter"`
+}
+
+// RenameChapter changes a chapter's filename to match a new title and rewrites
+// every codex anchor and plan reference to it.
+func (a *App) RenameChapter(bookID, chapter, newTitle string) (*RenameChapterResult, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	name, err := workspace.RenameChapter(path, bookID, chapter, newTitle)
+	if err != nil {
+		return nil, err
+	}
+	ws, err := a.reload()
+	if err != nil {
+		return nil, err
+	}
+	return &RenameChapterResult{Workspace: ws, Chapter: name}, nil
+}
+
+// DeleteChapter removes a chapter, renumbers the rest, and cleans references.
+func (a *App) DeleteChapter(bookID, chapter string) (*model.Workspace, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	if err := workspace.DeleteChapter(path, bookID, chapter); err != nil {
+		return nil, err
+	}
+	return a.reload()
+}
+
+// RenameBook changes a book's display title.
+func (a *App) RenameBook(bookID, newTitle string) (*model.Workspace, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	if err := workspace.RenameBook(path, bookID, newTitle); err != nil {
+		return nil, err
+	}
+	return a.reload()
+}
+
+// DeleteBook removes a book from the series and cleans references.
+func (a *App) DeleteBook(bookID string) (*model.Workspace, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	if err := workspace.DeleteBook(path, bookID); err != nil {
+		return nil, err
+	}
+	return a.reload()
+}
+
+// workspaceWordCount sums the word count of every manuscript chapter.
+func (a *App) workspaceWordCount() int {
+	a.mu.RLock()
+	ws := a.ws
+	a.mu.RUnlock()
+	if ws == nil {
+		return 0
+	}
+	total := 0
+	for _, b := range ws.Books {
+		for _, ch := range b.Chapters {
+			if text, err := workspace.ReadChapter(ws.Path, b.ID, ch); err == nil {
+				total += workspace.WordCount(text)
+			}
+		}
+	}
+	return total
+}
+
+// RecordWritingProgress recomputes the total manuscript word count, credits
+// any change since the last check to today, and returns the writing stats.
+func (a *App) RecordWritingProgress() (stats.Stats, error) {
+	a.mu.RLock()
+	ws := a.ws
+	a.mu.RUnlock()
+	if ws == nil {
+		return stats.Stats{}, fmt.Errorf("no workspace open")
+	}
+	return stats.Record(ws.Path, a.workspaceWordCount()), nil
+}
+
+// SetDailyGoal sets the workspace's daily word goal (0 = none).
+func (a *App) SetDailyGoal(goal int) (stats.Stats, error) {
+	a.mu.RLock()
+	ws := a.ws
+	a.mu.RUnlock()
+	if ws == nil {
+		return stats.Stats{}, fmt.Errorf("no workspace open")
+	}
+	return stats.SetGoal(ws.Path, goal, a.workspaceWordCount()), nil
 }
 
 // ScanText finds entity mentions and consistency flags in (unsaved) chapter
@@ -428,6 +663,303 @@ func (a *App) BookInsights(bookID string) (map[string]ChapterInsight, error) {
 		out[ch] = ChapterInsight{Cast: cast, Words: workspace.WordCount(text)}
 	}
 	return out, nil
+}
+
+// BookScenes returns every chapter's scenes in reading order for the
+// corkboard view.
+func (a *App) BookScenes(bookID string) ([]workspace.ChapterScenes, error) {
+	a.mu.RLock()
+	ws := a.ws
+	a.mu.RUnlock()
+	if ws == nil {
+		return nil, fmt.Errorf("no workspace open")
+	}
+	return workspace.BookScenes(ws.Path, bookID)
+}
+
+// MoveScene reorders a scene within a chapter or moves it to another chapter
+// of the same book, then returns the book's refreshed scene layout.
+func (a *App) MoveScene(bookID, srcChapter string, sceneIndex int, dstChapter string, dstIndex int) ([]workspace.ChapterScenes, error) {
+	a.mu.RLock()
+	ws := a.ws
+	a.mu.RUnlock()
+	if ws == nil {
+		return nil, fmt.Errorf("no workspace open")
+	}
+	if err := workspace.MoveScene(ws.Path, bookID, srcChapter, sceneIndex, dstChapter, dstIndex); err != nil {
+		return nil, err
+	}
+	return workspace.BookScenes(ws.Path, bookID)
+}
+
+// SetSceneTitle renames a scene and returns the refreshed scene layout.
+func (a *App) SetSceneTitle(bookID, chapter string, sceneIndex int, title string) ([]workspace.ChapterScenes, error) {
+	a.mu.RLock()
+	ws := a.ws
+	a.mu.RUnlock()
+	if ws == nil {
+		return nil, fmt.Errorf("no workspace open")
+	}
+	if err := workspace.SetSceneTitle(ws.Path, bookID, chapter, sceneIndex, title); err != nil {
+		return nil, err
+	}
+	return workspace.BookScenes(ws.Path, bookID)
+}
+
+// SearchHit groups a chapter's matches for the project-wide search view.
+type SearchHit struct {
+	BookID       string                `json:"bookId"`
+	BookTitle    string                `json:"bookTitle"`
+	Chapter      string                `json:"chapter"`
+	ChapterTitle string                `json:"chapterTitle"`
+	Matches      []workspace.TextMatch `json:"matches"`
+}
+
+// SearchResults is the outcome of a project-wide search.
+type SearchResults struct {
+	Hits  []SearchHit `json:"hits"`
+	Total int         `json:"total"` // total match count across all chapters
+}
+
+// SearchProject searches every chapter of every book for the query and returns
+// matches grouped by chapter, in reading order.
+func (a *App) SearchProject(query string, caseSensitive, wholeWord bool) (*SearchResults, error) {
+	a.mu.RLock()
+	ws := a.ws
+	a.mu.RUnlock()
+	if ws == nil {
+		return nil, fmt.Errorf("no workspace open")
+	}
+	res := &SearchResults{Hits: []SearchHit{}}
+	for _, book := range ws.Books {
+		for _, ch := range book.Chapters {
+			text, err := workspace.ReadChapter(ws.Path, book.ID, ch)
+			if err != nil {
+				continue
+			}
+			matches, err := workspace.SearchText(text, query, caseSensitive, wholeWord)
+			if err != nil {
+				return nil, err
+			}
+			if len(matches) == 0 {
+				continue
+			}
+			res.Hits = append(res.Hits, SearchHit{
+				BookID:       book.ID,
+				BookTitle:    book.Title,
+				Chapter:      ch,
+				ChapterTitle: workspace.ChapterTitle(text, ch),
+				Matches:      matches,
+			})
+			res.Total += len(matches)
+		}
+	}
+	return res, nil
+}
+
+// ReplaceAllProject replaces every match of query across the whole workspace,
+// rewriting the affected chapter files, and returns how many replacements were
+// made. Plain-file storage means each chapter is still individually editable
+// and diffable afterwards.
+func (a *App) ReplaceAllProject(query, replacement string, caseSensitive, wholeWord bool) (int, error) {
+	a.mu.RLock()
+	ws := a.ws
+	a.mu.RUnlock()
+	if ws == nil {
+		return 0, fmt.Errorf("no workspace open")
+	}
+	if query == "" {
+		return 0, fmt.Errorf("nothing to search for")
+	}
+	// A bulk replace can't be undone in one step; snapshot first so it can.
+	_, _, _ = history.Create(ws.Path, "Before replace-all", true, time.Now())
+	total := 0
+	for _, book := range ws.Books {
+		for _, ch := range book.Chapters {
+			text, err := workspace.ReadChapter(ws.Path, book.ID, ch)
+			if err != nil {
+				continue
+			}
+			out, n, err := workspace.ReplaceAllText(text, query, replacement, caseSensitive, wholeWord)
+			if err != nil {
+				return total, err
+			}
+			if n == 0 {
+				continue
+			}
+			if err := workspace.WriteChapter(ws.Path, book.ID, ch, out); err != nil {
+				return total, err
+			}
+			total += n
+		}
+	}
+	return total, nil
+}
+
+// CreateSnapshot captures the workspace's current text as a revision and
+// returns the refreshed snapshot list. If nothing changed since the last
+// snapshot, no duplicate is created.
+func (a *App) CreateSnapshot(label string) ([]history.Snapshot, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	if _, _, err := history.Create(path, label, false, time.Now()); err != nil {
+		return nil, err
+	}
+	return history.List(path)
+}
+
+// ListSnapshots returns all revisions, newest first.
+func (a *App) ListSnapshots() ([]history.Snapshot, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	return history.List(path)
+}
+
+// SnapshotChanges lists how the workspace differs from a snapshot.
+func (a *App) SnapshotChanges(id string) ([]history.FileChange, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	return history.Changes(path, id)
+}
+
+// SnapshotFileDiff returns a line diff of one file between a snapshot and now.
+func (a *App) SnapshotFileDiff(id, rel string) (*history.DiffResult, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	res, err := history.FileDiff(path, id, rel)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+// RestoreSnapshotFile reverts a single file to its snapshot version and returns
+// the refreshed workspace.
+func (a *App) RestoreSnapshotFile(id, rel string) (*model.Workspace, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	if err := history.RestoreFile(path, id, rel); err != nil {
+		return nil, err
+	}
+	return a.reload()
+}
+
+// RestoreSnapshot rolls the whole workspace back to a snapshot. It takes a
+// safety snapshot of the current state first, so the rollback is itself
+// reversible, then returns the refreshed workspace.
+func (a *App) RestoreSnapshot(id string) (*model.Workspace, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	_, _, _ = history.Create(path, "Before restore", true, time.Now())
+	if _, err := history.Restore(path, id); err != nil {
+		return nil, err
+	}
+	return a.reload()
+}
+
+// DeleteSnapshot removes a revision and returns the refreshed list.
+func (a *App) DeleteSnapshot(id string) ([]history.Snapshot, error) {
+	path, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	if err := history.Delete(path, id); err != nil {
+		return nil, err
+	}
+	return history.List(path)
+}
+
+// Backlink is one chapter that mentions a codex entity.
+type Backlink struct {
+	BookID       string `json:"bookId"`
+	BookTitle    string `json:"bookTitle"`
+	Chapter      string `json:"chapter"`
+	ChapterTitle string `json:"chapterTitle"`
+	Count        int    `json:"count"`
+	Snippet      string `json:"snippet"` // context around the first mention
+}
+
+// Backlinks scans every chapter of every book and reports where the given
+// codex entity (by name/alias) is mentioned — the manuscript half of an
+// entry's backlinks. Codex-to-codex references come from the relation graph
+// on the frontend; this surfaces the prose appearances the graph can't.
+func (a *App) Backlinks(entryID string) ([]Backlink, error) {
+	a.mu.RLock()
+	ws, matcher := a.ws, a.matcher
+	a.mu.RUnlock()
+	if ws == nil {
+		return nil, fmt.Errorf("no workspace open")
+	}
+	var out []Backlink
+	for _, book := range ws.Books {
+		for _, ch := range book.Chapters {
+			text, err := workspace.ReadChapter(ws.Path, book.ID, ch)
+			if err != nil {
+				continue
+			}
+			count := 0
+			first := -1
+			for _, sp := range matcher.Scan(text) {
+				if sp.EntryID != entryID {
+					continue
+				}
+				count++
+				if first < 0 {
+					first = sp.Start
+				}
+			}
+			if count == 0 {
+				continue
+			}
+			out = append(out, Backlink{
+				BookID:       book.ID,
+				BookTitle:    book.Title,
+				Chapter:      ch,
+				ChapterTitle: workspace.ChapterTitle(text, ch),
+				Count:        count,
+				Snippet:      mentionSnippet(text, first),
+			})
+		}
+	}
+	return out, nil
+}
+
+// mentionSnippet returns a short window of prose around a rune offset, with an
+// ellipsis on either side when it's clipped from a longer chapter.
+func mentionSnippet(text string, runeStart int) string {
+	if runeStart < 0 {
+		return ""
+	}
+	runes := []rune(text)
+	const pad = 60
+	from := runeStart - pad
+	if from < 0 {
+		from = 0
+	}
+	to := runeStart + pad
+	if to > len(runes) {
+		to = len(runes)
+	}
+	s := strings.TrimSpace(strings.Join(strings.Fields(string(runes[from:to])), " "))
+	if from > 0 {
+		s = "… " + s
+	}
+	if to < len(runes) {
+		s = s + " …"
+	}
+	return s
 }
 
 // DeepScan runs the optional Cybertron transformer pass over a chapter and

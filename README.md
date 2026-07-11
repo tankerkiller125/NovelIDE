@@ -34,10 +34,16 @@ checked against each other as you type.
 ### 📖 A Codex that actually knows your world
 Characters, locations, items, factions, creatures, magic systems — whatever your
 world is made of. **You define the entry types**, so a cozy mystery and an
-eight-book space opera each get a Codex shaped to fit. Connect entries with rich,
-directional relationships that change over time — _allied with a rival house
-until book three, sworn enemies after_. Hover any name in your draft to see its
-card without ever leaving the page.
+eight-book space opera each get a Codex shaped to fit. Give entries portraits and
+maps, and connect them with rich, directional relationships that change over
+time — _allied with a rival house until book three, sworn enemies after_. Hover
+any name in your draft to see its card, image and all, without ever leaving the
+page.
+
+### 🕸 See the whole web
+Open the relationship graph and your entire cast lights up as a living map —
+who's connected to whom, colored by type, filterable, and clickable straight
+through to any entry. Hover a character to spotlight their corner of the story.
 
 ### 🔎 Catches continuity mistakes as you write
 Give a character a life-timeline — alive, then dead as of book two, chapter nine
@@ -63,6 +69,24 @@ itself.
 Share one Codex across an entire series. Reorder the books and the whole
 timeline — every death, every relationship — re-checks itself against the new
 reading order.
+
+### 📦 Compile to a finished book
+When the draft is done, stitch your chapters into a real book: a valid **EPUB**
+for e-readers, or **print-ready HTML** you can Print → Save as PDF. Pick a theme —
+double-spaced standard manuscript format for submissions, a classic serif
+paperback, a clean modern look — and preview it live before you export. Export
+the whole series or just the books you choose.
+
+### ✍️ Stay in flow
+A distraction-free **focus mode** (Ctrl+Shift+F) hides the sidebar and the
+consistency panel so it's just you and the page. Leave yourself **editorial
+notes** right in the manuscript — select a passage and jot a note (_"check the
+timeline", "POV slip?"_); it's highlighted as you write and quietly stripped from
+every export, so your reminders never reach the finished book. A quiet status bar
+keeps score — total words, words this session, and your progress toward a **daily
+goal** with a writing streak. Manage your manuscript naturally: right-click any
+book or chapter to rename or delete it, and NovelIDE keeps every codex timeline
+anchor and plan reference pointing at the right place.
 
 ### 💾 Your files, forever
 Everything is plain **Markdown and YAML** in a folder you control — git-friendly,

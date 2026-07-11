@@ -1,6 +1,7 @@
 // Central reactive state for the IDE, shared via composables (no Pinia
 // needed at this size).
 import { computed, reactive } from 'vue'
+import { ReadImageDataURL } from './api'
 import type {
   CardData,
   CardStatusLine,
@@ -55,7 +56,50 @@ export interface SeriesPlanTab {
   pinned?: boolean
 }
 
-export type Tab = ChapterTab | CodexTab | SchemaTab | SettingsTab | PlanTab | SeriesPlanTab
+export interface ExportTab {
+  kind: 'export'
+  pinned?: boolean
+}
+
+export interface GraphTab {
+  kind: 'graph'
+  pinned?: boolean
+}
+
+export interface CorkboardTab {
+  kind: 'corkboard'
+  bookId: string
+  pinned?: boolean
+}
+
+export interface TimelineTab {
+  kind: 'timeline'
+  pinned?: boolean
+}
+
+export interface SearchTab {
+  kind: 'search'
+  pinned?: boolean
+}
+
+export interface HistoryTab {
+  kind: 'history'
+  pinned?: boolean
+}
+
+export type Tab =
+  | ChapterTab
+  | CodexTab
+  | SchemaTab
+  | SettingsTab
+  | PlanTab
+  | SeriesPlanTab
+  | ExportTab
+  | GraphTab
+  | CorkboardTab
+  | TimelineTab
+  | SearchTab
+  | HistoryTab
 
 export const tabKey = (t: Tab): string =>
   t.kind === 'chapter'
@@ -64,7 +108,9 @@ export const tabKey = (t: Tab): string =>
       ? `codex:${t.entryId || '~new~'}`
       : t.kind === 'plan'
         ? `plan:${t.bookId}`
-        : t.kind
+        : t.kind === 'corkboard'
+          ? `corkboard:${t.bookId}`
+          : t.kind
 
 interface State {
   workspace: Workspace | null
@@ -78,6 +124,15 @@ interface State {
   /** suggestion keys the user has dismissed this session */
   dismissedSuggestions: Set<string>
   dirtyChapters: Set<string>
+  /** distraction-free mode: hide sidebar and consistency panel */
+  focusMode: boolean
+  /** bumped after a chapter saves, so the stats bar can refresh promptly */
+  statsTick: number
+  /** a requested cursor jump, consumed by the target chapter's editor */
+  pendingJump: { bookId: string; chapter: string; line: number } | null
+  /** bumped when chapter files change on disk (e.g. project replace), so the
+   *  open editor reloads its content */
+  reloadTick: number
 }
 
 export const state = reactive<State>({
@@ -89,6 +144,10 @@ export const state = reactive<State>({
   suggestions: [],
   dismissedSuggestions: new Set(),
   dirtyChapters: new Set(),
+  focusMode: false,
+  statsTick: 0,
+  pendingJump: null,
+  reloadTick: 0,
 })
 
 export const codexById = computed(() => {
@@ -96,6 +155,25 @@ export const codexById = computed(() => {
   for (const e of state.workspace?.codex ?? []) map.set(e.id, e)
   return map
 })
+
+// Codex entry images, lazily fetched as data URLs and cached (reactive so
+// views update when a fetch completes).
+export const imageCache = reactive(new Map<string, string>())
+
+export async function ensureImage(rel: string) {
+  if (!rel || imageCache.has(rel)) return
+  imageCache.set(rel, '') // in-flight marker prevents duplicate fetches
+  try {
+    imageCache.set(rel, await ReadImageDataURL(rel))
+  } catch {
+    imageCache.delete(rel) // allow a later retry
+  }
+}
+
+/** Cached data URL for an image path, or undefined if not (yet) loaded. */
+export function imageURL(rel: string): string | undefined {
+  return (rel ? imageCache.get(rel) : '') || undefined
+}
 
 /** Schema types plus any types found on entries but missing from the schema. */
 export const schemaTypes = computed<TypeDef[]>(() => {
@@ -123,7 +201,7 @@ export const relationDefById = computed(() => {
   return map
 })
 
-function storyPointLabel(p?: StoryPoint): string {
+export function storyPointLabel(p?: StoryPoint): string {
   if (!p?.book) return ''
   const book = (state.workspace?.books ?? []).find((b) => b.id === p.book)
   const bookLabel = book?.title ?? p.book
@@ -135,7 +213,7 @@ function storyPointLabel(p?: StoryPoint): string {
  * Global story ordering, mirroring the Go detect.Timeline: every chapter of
  * every book gets an increasing ordinal; "book/" marks a book's start.
  */
-const storyOrder = computed(() => {
+export const storyOrder = computed(() => {
   const order = new Map<string, number>()
   let pos = 0
   for (const b of state.workspace?.books ?? []) {
@@ -150,7 +228,7 @@ const storyOrder = computed(() => {
 })
 
 /** Ordinal of a story point: 0 = from the start, -1 = unresolvable. */
-function positionOf(p?: StoryPoint): number {
+export function positionOf(p?: StoryPoint): number {
   if (!p?.book) return 0
   const order = storyOrder.value
   if (!p.chapter) return order.get(`${p.book}/`) ?? -1
@@ -251,9 +329,11 @@ export function cardDataAt(entryId: string, bookId: string, chapter: string): Ca
     ;(active ? activeRelations : inactiveRelations).push(r)
   }
 
+  if (entry.image) void ensureImage(entry.image)
   return {
     entry,
     typeLabel: typeDefById.value.get(entry.type)?.label ?? entry.type,
+    imageUrl: imageURL(entry.image),
     state: currentIdx >= 0 ? statusTimeline[currentIdx] : null,
     activeRelations,
     inactiveRelations,
@@ -263,6 +343,8 @@ export function cardDataAt(entryId: string, bookId: string, chapter: string): Ca
 
 export function setWorkspace(ws: Workspace) {
   state.workspace = ws
+  // Preload codex images so hover cards and the codex editor show them.
+  for (const e of ws.codex ?? []) if (e.image) void ensureImage(e.image)
   // Drop tabs pointing at things that no longer exist.
   const entryIds = new Set((ws.codex ?? []).map((e) => e.id))
   state.tabs = state.tabs.filter((t) => {
@@ -271,7 +353,8 @@ export function setWorkspace(ws: Workspace) {
         (b) => b.id === t.bookId && (b.chapters ?? []).includes(t.chapter),
       )
     if (t.kind === 'codex') return t.entryId === '' || entryIds.has(t.entryId)
-    if (t.kind === 'plan') return (ws.books ?? []).some((b) => b.id === t.bookId)
+    if (t.kind === 'plan' || t.kind === 'corkboard')
+      return (ws.books ?? []).some((b) => b.id === t.bookId)
     return true
   })
   if (state.activeTab && !state.tabs.some((t) => tabKey(t) === state.activeTab)) {
@@ -311,6 +394,18 @@ export function openTab(tab: Tab) {
   state.activeTab = key
 }
 
+/**
+ * Open a chapter and request the cursor jump to a line (1-based). The chapter's
+ * editor consumes `pendingJump` when it mounts or, if already open, reacts to
+ * the change. Pinned so a search result the author is inspecting stays open.
+ */
+export function openChapterAtLine(bookId: string, chapter: string, line: number) {
+  state.pendingJump = { bookId, chapter, line }
+  const tab: Tab = { kind: 'chapter', bookId, chapter }
+  openTab(tab)
+  pinTab(tabKey(tab))
+}
+
 /** Pin a tab so it stops being a self-closing preview. */
 export function pinTab(key: string) {
   const t = state.tabs.find((x) => tabKey(x) === key)
@@ -334,6 +429,80 @@ export function closeTab(key: string) {
 export const activeTabObj = computed(
   () => state.tabs.find((t) => tabKey(t) === state.activeTab) ?? null,
 )
+
+// ---- Modal dialogs (real replacements for window.prompt / confirm) ----
+interface ModalState {
+  kind: 'prompt' | 'confirm' | null
+  title: string
+  message: string
+  label: string
+  value: string
+  placeholder: string
+  confirmText: string
+  danger: boolean
+  resolve: ((v: unknown) => void) | null
+}
+
+export const modal = reactive<ModalState>({
+  kind: null,
+  title: '',
+  message: '',
+  label: '',
+  value: '',
+  placeholder: '',
+  confirmText: 'OK',
+  danger: false,
+  resolve: null,
+})
+
+/** Ask for a line of text. Resolves to the trimmed value, or null if cancelled. */
+export function promptInput(o: {
+  title: string
+  label?: string
+  value?: string
+  placeholder?: string
+  confirmText?: string
+}): Promise<string | null> {
+  return new Promise((resolve) => {
+    Object.assign(modal, {
+      kind: 'prompt',
+      title: o.title,
+      message: '',
+      label: o.label ?? '',
+      value: o.value ?? '',
+      placeholder: o.placeholder ?? '',
+      confirmText: o.confirmText ?? 'OK',
+      danger: false,
+      resolve: resolve as (v: unknown) => void,
+    })
+  })
+}
+
+/** Ask a yes/no question. Resolves true (confirmed) or false (cancelled). */
+export function confirmDialog(o: {
+  title: string
+  message: string
+  confirmText?: string
+  danger?: boolean
+}): Promise<boolean> {
+  return new Promise((resolve) => {
+    Object.assign(modal, {
+      kind: 'confirm',
+      title: o.title,
+      message: o.message,
+      confirmText: o.confirmText ?? 'OK',
+      danger: o.danger ?? false,
+      resolve: resolve as (v: unknown) => void,
+    })
+  })
+}
+
+export function resolveModal(result: unknown) {
+  const r = modal.resolve
+  modal.kind = null
+  modal.resolve = null
+  if (r) r(result)
+}
 
 /** Return to the welcome screen, clearing all workspace-bound state. */
 export function closeProject() {

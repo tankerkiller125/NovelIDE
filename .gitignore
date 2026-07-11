@@ -67,3 +67,7 @@ Desktop.ini
 
 # ---- Logs ----
 *.log
+
+# ---- NovelIDE local revision history (per-workspace snapshot store) ----
+# Created when a workspace (e.g. the bundled examples) is opened and edited.
+.novelide/

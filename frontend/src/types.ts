@@ -67,6 +67,82 @@ export interface ChapterInsight {
   words: number
 }
 
+/** One scene within a chapter. Index 0 is the immovable opening. */
+export interface Scene {
+  index: number
+  title: string
+  words: number
+  snippet: string
+}
+
+/** A chapter's scenes, for the corkboard. */
+export interface ChapterScenes {
+  chapter: string
+  title: string
+  scenes: Scene[]
+}
+
+/** One captured revision of the workspace. */
+export interface Snapshot {
+  id: string
+  time: string
+  label: string
+  auto: boolean
+  files: number
+  size: number
+}
+
+/** How one file differs between a snapshot and the current workspace. */
+export interface FileChange {
+  rel: string
+  status: 'modified' | 'added' | 'removed'
+}
+
+/** One line of a snapshot-vs-current diff. */
+export interface DiffLine {
+  op: 'eq' | 'add' | 'del'
+  text: string
+}
+
+export interface DiffResult {
+  rel: string
+  lines: DiffLine[]
+}
+
+/** One occurrence of a search query within a chapter. */
+export interface TextMatch {
+  line: number
+  col: number
+  before: string
+  match: string
+  after: string
+}
+
+/** A chapter's matches for the project-wide search view. */
+export interface SearchHit {
+  bookId: string
+  bookTitle: string
+  chapter: string
+  chapterTitle: string
+  matches: TextMatch[]
+}
+
+/** The result of a project-wide search. */
+export interface SearchResults {
+  hits: SearchHit[]
+  total: number
+}
+
+/** One chapter that mentions a codex entity, for the backlinks panel. */
+export interface Backlink {
+  bookId: string
+  bookTitle: string
+  chapter: string
+  chapterTitle: string
+  count: number
+  snippet: string
+}
+
 /** One book's card in the series plan. */
 export interface SeriesBookPlan {
   id: string
@@ -99,6 +175,8 @@ export interface CodexEntry {
   aliases: string[] | null
   summary: string
   details: string
+  /** workspace-relative image path, or "" */
+  image: string
   fields: Record<string, string> | null
   status: StatusChange[] | null
   relations: Relation[] | null
@@ -172,6 +250,37 @@ export interface CreateChapterResult {
   chapter: string
 }
 
+export interface RenameChapterResult {
+  workspace: Workspace
+  chapter: string
+}
+
+export interface WritingStats {
+  today: string
+  todayWords: number
+  goal: number
+  streak: number
+  total: number
+}
+
+export type ExportFormat = 'epub' | 'html'
+
+export interface ExportTheme {
+  id: string
+  label: string
+  description: string
+}
+
+export interface ExportOptions {
+  format: ExportFormat
+  themeId: string
+  title: string
+  author: string
+  /** book ids to include; empty = all, in reading order */
+  books: string[]
+  titlePage: boolean
+}
+
 /** Persisted application settings (app-level, not per-workspace). */
 export interface Settings {
   deepEnabled: boolean
@@ -185,6 +294,8 @@ export interface Settings {
   editorLineHeight: number
   editorLineNumbers: boolean
   editorSpellcheck: boolean
+  /** true = always show raw Markdown markers (disables live preview) */
+  editorRawMarkup: boolean
   /** spellcheck dictionary language, e.g. "en_US" */
   spellcheckLang: string
   recent: string[]
@@ -221,6 +332,8 @@ export interface CardStatusLine {
 export interface CardData {
   entry: CodexEntry
   typeLabel: string
+  /** data URL for the entry's image, if loaded */
+  imageUrl?: string
   /** the entity's state at this point in the story, if it has a timeline */
   state: CardStatusLine | null
   activeRelations: RelationDisplay[]

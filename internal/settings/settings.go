@@ -32,6 +32,10 @@ type Settings struct {
 	EditorLineNumbers bool `json:"editorLineNumbers"`
 	// EditorSpellcheck enables the platform spellchecker in the editor.
 	EditorSpellcheck bool `json:"editorSpellcheck"`
+	// EditorRawMarkup disables live Markdown rendering, showing the raw
+	// `**`, `_`, `#`, and `` ` `` markers at all times. Off by default (zero
+	// value) so live preview is on out of the box.
+	EditorRawMarkup bool `json:"editorRawMarkup"`
 	// SpellcheckLang is the dictionary language, e.g. "en_US".
 	SpellcheckLang string `json:"spellcheckLang"`
 	// Recent lists recently opened workspace paths, most recent first.
