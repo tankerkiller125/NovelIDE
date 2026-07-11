@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue'
-import { GetSettings, SaveSettings, SelectFolder, SpellStatus } from '../api'
+import { AppVersion, GetSettings, SaveSettings, SelectFolder, SpellStatus } from '../api'
 import { pinActiveTab, state } from '../store'
 
 const FONT_PRESETS = ['serif', 'sans', 'mono']
@@ -31,7 +31,15 @@ async function refreshSpellStatus() {
     spellStatus.value = ''
   }
 }
+const version = ref('')
 onMounted(refreshSpellStatus)
+onMounted(async () => {
+  try {
+    version.value = await AppVersion()
+  } catch {
+    version.value = 'dev'
+  }
+})
 
 async function load() {
   const s = state.settings ?? (await GetSettings())
@@ -234,6 +242,16 @@ async function save() {
       <ul class="recent">
         <li v-for="r in state.settings?.recent ?? []" :key="r">{{ r }}</li>
       </ul>
+    </section>
+
+    <section>
+      <h3>About</h3>
+      <p class="hint">
+        NovelIDE <strong>{{ version }}</strong> · AGPL-3.0-or-later ·
+        <a href="https://github.com/tankerkiller125/NovelIDE" target="_blank" rel="noopener">
+          github.com/tankerkiller125/NovelIDE
+        </a>
+      </p>
     </section>
   </div>
 </template>

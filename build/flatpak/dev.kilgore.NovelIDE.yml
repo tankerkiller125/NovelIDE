@@ -33,6 +33,10 @@ finish-args:
   - --socket=fallback-x11
   - --share=ipc
   - --device=dri
+  # NovelIDE's UI is dark-only; pin the GTK window chrome (client-side
+  # decoration / header) to the dark Adwaita variant so the titlebar matches
+  # the app instead of rendering as a light bar over a dark window.
+  - --env=GTK_THEME=Adwaita:dark
   # Workspaces are plain folders anywhere in $HOME
   - --filesystem=home
   # Only used by the optional deep-NLP tier to download models from

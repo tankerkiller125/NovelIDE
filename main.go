@@ -18,6 +18,7 @@ package main
 
 import (
 	"embed"
+	"strings"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -26,6 +27,22 @@ import (
 
 //go:embed all:frontend/dist
 var assets embed.FS
+
+// version is stamped from the release tag at build time: the release workflow
+// (and the vendored-tarball script) write the tag into version.txt before
+// building, so packaged builds report their real version while source/dev
+// builds fall back to "dev".
+//
+//go:embed version.txt
+var versionRaw string
+
+// Version returns the app's version string ("dev" for unstamped builds).
+func Version() string {
+	if v := strings.TrimSpace(versionRaw); v != "" {
+		return v
+	}
+	return "dev"
+}
 
 func main() {
 	// Create an instance of the app structure

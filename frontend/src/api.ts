@@ -31,6 +31,8 @@ declare global {
 
 const app = () => window.go.main.App
 
+export const AppVersion = (): Promise<string> => app().AppVersion()
+
 export const SelectFolder = (title: string): Promise<string> => app().SelectFolder(title)
 
 export const CreateWorkspace = (path: string, name: string, kind: string): Promise<Workspace> =>

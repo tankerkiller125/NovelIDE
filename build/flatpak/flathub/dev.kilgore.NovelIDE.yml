@@ -32,6 +32,8 @@ finish-args:
   - --device=dri
   - --filesystem=home
   - --share=network
+  # Dark-only UI: pin the GTK titlebar dark so it matches the app.
+  - --env=GTK_THEME=Adwaita:dark
 
 modules:
   - name: novelide
@@ -48,8 +50,7 @@ modules:
       - install -Dm644 build/flatpak/dicts/en_GB.dic /app/share/hunspell/en_GB.dic
     sources:
       - type: archive
-        # TODO: point at the release tarball and paste the sha256 the
-        # release workflow prints, e.g.
-        # url: https://github.com/OWNER/novelide/releases/download/v0.1.0/novelide-0.1.0-vendored.tar.xz
-        url: https://github.com/OWNER/novelide/releases/download/vX.Y.Z/novelide-X.Y.Z-vendored.tar.xz
+        # TODO per release: bump the version in the URL and paste the sha256
+        # the release workflow prints (novelide-<version>-vendored.tar.xz.sha256).
+        url: https://github.com/tankerkiller125/NovelIDE/releases/download/vX.Y.Z/novelide-X.Y.Z-vendored.tar.xz
         sha256: FILL_ME_IN

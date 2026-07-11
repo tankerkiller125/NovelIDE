@@ -47,12 +47,87 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
 
+      # The AppStream changelog shown in software centres is taken live from the
+      # GitHub release notes for this tag — nothing is hand-maintained in the
+      # repo. The release already exists when this pipeline runs (the tag push
+      # that triggers it comes from publishing the release), so we read its
+      # body directly. This rewrites the metainfo <releases> block before the
+      # tarball is packed, so both the GitHub-attached Flatpak and the Flathub
+      # tarball carry the right notes.
+      - name: Inject GitHub release notes into AppStream metainfo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          # The published release body (falls back to generated notes, then empty).
+          gh release view "$TAG" --json body -q .body > notes.md \
+            || gh api -X POST "repos/${{ github.repository }}/releases/generate-notes" \
+                 -f tag_name="$TAG" -q .body > notes.md \
+            || : > notes.md
+          # Date the AppStream entry with the release's publish date, not the
+          # build date (falls back to today if unavailable).
+          PUB="$(gh release view "$TAG" --json publishedAt -q .publishedAt 2>/dev/null || true)"
+          DATE="${PUB%%T*}"; [ -n "$DATE" ] && [ "$DATE" != "null" ] || DATE="$(date +%F)"
+          VERSION="$VERSION" DATE="$DATE" \
+          META="build/flatpak/dev.kilgore.NovelIDE.metainfo.xml" \
+          python3 - <<'PY'
+          import os, re, html
+          notes = open('notes.md', encoding='utf-8').read()
+          version, date, meta = os.environ['VERSION'], os.environ['DATE'], os.environ['META']
+
+          def esc(s):
+              return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+          def inline(t):
+              t = re.sub(r'\s+by\s+@[\w-]+\s+in\s+\S+', '', t)   # "… by @user in <url>"
+              t = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', t)      # [text](url) -> text
+              t = re.sub(r'https?://\S+', '', t).strip()          # bare URLs
+              t = esc(t)
+              t = re.sub(r'`([^`]+)`', r'<code>\1</code>', t)
+              t = re.sub(r'\*\*([^*]+)\*\*', r'<em>\1</em>', t)
+              return t.strip()
+
+          body, in_ul = [], False
+          def close():
+              global in_ul
+              if in_ul:
+                  body.append('        </ul>'); in_ul = False
+          for raw in notes.splitlines():
+              line = raw.strip()
+              if not line or line.lower().startswith('**full changelog'):
+                  continue
+              h = re.match(r'#{1,6}\s+(.*)', line)
+              b = re.match(r'[-*]\s+(.*)', line)
+              if h:
+                  close(); body.append(f'        <p>{esc(h.group(1).strip())}</p>')
+              elif b:
+                  if not in_ul:
+                      body.append('        <ul>'); in_ul = True
+                  it = inline(b.group(1))
+                  if it:
+                      body.append(f'          <li>{it}</li>')
+              else:
+                  close(); body.append(f'        <p>{esc(line)}</p>')
+          close()
+          desc = '\n'.join(body) or '        <p>See the release on GitHub for details.</p>'
+
+          block = (f'  <releases>\n    <release version="{version}" date="{date}">\n'
+                   f'      <description>\n{desc}\n      </description>\n    </release>\n  </releases>')
+          xml = open(meta, encoding='utf-8').read()
+          xml = re.sub(r'[ \t]*<releases>.*?</releases>', lambda _: block, xml, flags=re.S)
+          open(meta, 'w', encoding='utf-8').write(xml)
+          print(f'injected {version} notes into {meta}')
+          PY
+
       - name: Vendored source tarball (also builds frontend + vendor/)
         run: ./build/flatpak/make-vendored-tarball.sh "$VERSION"
 
       - name: Linux binary + archive
         run: |
           mkdir -p dist
+          # Stamp the release version into the embedded version.txt (the
+          # tarball step above restored it to "dev").
+          printf '%s\n' "$VERSION" > version.txt
           go build -mod=vendor -trimpath -buildvcs=false \
             -tags desktop,production,webkit2_41 -ldflags "-s -w" \
             -o dist/novelide .
@@ -115,6 +190,8 @@ jobs:
         shell: pwsh
         run: |
           $env:Path += ";$env:USERPROFILE\go\bin"
+          # Stamp the release version into the embedded version.txt.
+          $env:VERSION | Out-File -Encoding ascii -NoNewline version.txt
           wails build -platform windows/amd64 -clean
 
       - name: Package
@@ -165,6 +242,8 @@ jobs:
       - name: Build (universal — Intel + Apple Silicon)
         run: |
           export PATH="$PATH:$(go env GOPATH)/bin"
+          # Stamp the release version into the embedded version.txt.
+          printf '%s\n' "$VERSION" > version.txt
           wails build -platform darwin/universal -clean
 
       - name: Package
@@ -236,10 +315,10 @@ jobs:
           path: dist/*
 
   release:
-    name: Publish GitHub release
+    name: Attach artifacts to the release
     needs: [linux, windows, macos, flatpak]
-    # Publish as long as the three native builds succeeded; the flatpak
-    # bundle (most fragile — external container, network) is attached if it
+    # Attach as long as the three native builds succeeded; the flatpak
+    # bundle (most fragile — external container, network) is added if it
     # made it, but its failure never blocks the release.
     if: >-
       always() &&
@@ -255,13 +334,15 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Create release with every archive attached
+      # The release is authored and published by hand first; the tag push is
+      # what triggers this pipeline. So this step only uploads the built
+      # archives to the existing release — it must NOT regenerate or overwrite
+      # the body, and it leaves the draft/prerelease/title exactly as set on
+      # the release. (No `generate_release_notes`, `body`, or `prerelease`
+      # inputs: softprops only patches the fields it's given, preserving the
+      # rest.)
+      - name: Attach build archives to the existing release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
-          generate_release_notes: true
           fail_on_unmatched_files: true
-          # A tag with a "-" prerelease identifier (v1.0.0-alpha.1, -beta.1,
-          # -rc.1) is published as a GitHub pre-release. A plain vX.Y.Z or one
-          # carrying only "+build" metadata is a full release.
-          prerelease: ${{ contains(github.ref_name, '-') }}

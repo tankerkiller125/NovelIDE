@@ -58,6 +58,12 @@ func (a *App) startup(ctx context.Context) {
 	}
 }
 
+// AppVersion returns the running app's version (from the release tag, or
+// "dev" for source builds), for display in the UI.
+func (a *App) AppVersion() string {
+	return Version()
+}
+
 // GetSettings returns the persisted application settings.
 func (a *App) GetSettings() settings.Settings {
 	a.mu.RLock()

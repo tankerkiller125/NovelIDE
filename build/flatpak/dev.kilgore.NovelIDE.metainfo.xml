@@ -24,10 +24,11 @@
     </p>
   </description>
   <launchable type="desktop-id">dev.kilgore.NovelIDE.desktop</launchable>
-  <!-- TODO before Flathub submission: point at the real repository, and
-       add <screenshot> entries (Flathub strongly recommends them). -->
-  <url type="homepage">https://github.com/OWNER/novelide</url>
-  <url type="bugtracker">https://github.com/OWNER/novelide/issues</url>
+  <!-- TODO before Flathub submission: add <screenshot> entries (Flathub
+       strongly recommends them). -->
+  <url type="homepage">https://github.com/tankerkiller125/NovelIDE</url>
+  <url type="bugtracker">https://github.com/tankerkiller125/NovelIDE/issues</url>
+  <url type="vcs-browser">https://github.com/tankerkiller125/NovelIDE</url>
   <categories>
     <category>Office</category>
     <category>WordProcessor</category>

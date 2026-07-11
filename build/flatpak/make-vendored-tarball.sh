@@ -20,6 +20,15 @@ echo "==> frontend build"
 echo "==> go mod vendor"
 (cd "$ROOT" && go mod vendor)
 
+# Stamp the version into the embedded version.txt so the packed tarball is
+# self-describing (the app reports its real version with no build-time env).
+# The AppStream changelog is injected separately by the release workflow, which
+# pulls it live from the GitHub release notes. Restored afterward so a local
+# run doesn't leave the working tree dirty.
+echo "==> stamping version $VERSION"
+printf '%s\n' "$VERSION" > "$ROOT/version.txt"
+trap 'git -C "$ROOT" checkout -- version.txt 2>/dev/null || true' EXIT
+
 echo "==> packing $OUT"
 tar -C "$ROOT" \
   --exclude='./build/bin' \
