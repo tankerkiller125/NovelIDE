@@ -1,0 +1,17 @@
+chapters:
+    - file: 01-the-ash-farms.md
+      synopsis: Aria and Kael ride out from the ash-farms as the first signs of the Gate stirring reach Emberfall.
+      status: drafted
+      pov: aria-voss
+      location: emberfall
+      when: 3127-03
+      arcs:
+        - the-ash-gate-arc
+    - file: 02-the-battle-of-cinders.md
+      synopsis: The Ash Gate cracks open. Aria seals it with the Ember Crown — and herself.
+      status: revised
+      pov: kael-dryn
+      location: emberfall
+      when: 3127-06
+      arcs:
+        - the-ash-gate-arc

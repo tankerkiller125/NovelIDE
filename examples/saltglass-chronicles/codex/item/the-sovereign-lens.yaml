@@ -1,0 +1,16 @@
+id: the-sovereign-lens
+name: the Sovereign Lens
+type: item
+aliases:
+- the Deathless Lens
+- the Lens of Tides
+summary: The first Relic — an unbeatable focus that answers only to whoever bested its last master. Its
+  bloody chain of mastery decides the final duel.
+fields:
+  type: Saltglass Relic
+  maker: the tide (per the tale); black star-glass, kraken-sinew core
+  powers: unmatched weaving for its true master
+status:
+- state: intact
+  note: 'Mastery chain across the saga: Mourn -> Hollis -> Julian (spire, book 6) -> Wren (Mirehold Keep,
+    book 7). Mirehold holds it in book 7 without ever mastering it. Wren returns it to Hollis''s cairn.'

@@ -1,0 +1,10 @@
+id: the-ash-gate-arc
+name: the Ash Gate arc
+type: arc
+summary: The Gate must be sealed, whatever it costs — and it costs Aria.
+fields:
+  premise: The dead pour through the Ash Gate unless someone seals it.
+  payoff: Aria's sacrifice at the Battle of Cinders.
+relations:
+  - type: located-in
+    to: emberfall

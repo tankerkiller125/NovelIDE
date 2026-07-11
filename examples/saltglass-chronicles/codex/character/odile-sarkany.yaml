@@ -1,0 +1,31 @@
+id: odile-sarkany
+name: Odile Sarkany
+type: character
+aliases:
+- Odile
+summary: Unwoven-born and the sharpest mind at Thornfall; the trio's planner, founder of the Deepkin Society,
+  and the reason the others survive.
+fields:
+  order: Riptide
+  lineage: unwoven-born
+  beacon: heron
+status:
+- state: alive
+relations:
+- type: member-of
+  to: riptide-order
+- type: member-of
+  to: wrens-watch
+  from:
+    book: 05-the-drowned-court
+- type: created
+  to: deepkin-society
+  from:
+    book: 04-the-trine-tournament
+- type: loves
+  to: perrin-marsh
+  from:
+    book: 06-the-reliquary
+- type: pet-of
+  to: sootpaw
+  note: Sootpaw is her cat; the relation reads from the cat's side.

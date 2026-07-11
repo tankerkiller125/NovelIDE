@@ -1,0 +1,8 @@
+id: the-vault-of-tides
+name: the Vault of Tides
+type: location
+summary: 'The Concord''s deepest floor: the Hall of Prophecy, the still-room of thought, the locked chamber
+  of love, and the tide-veil that Dorian falls through.'
+fields:
+  type: research department
+  region: the Concord Halls, the ninth deep

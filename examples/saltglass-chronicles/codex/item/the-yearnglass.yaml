@@ -1,0 +1,9 @@
+id: the-yearnglass
+name: the Yearnglass
+type: item
+summary: 'Shows not your face but your heart''s deepest want — weavers have wasted away before it. Hollis''s
+  last hiding place for the Tidestone: only one who wants to find it, not use it, can.'
+fields:
+  powers: shows the viewer's deepest want
+status:
+- state: intact

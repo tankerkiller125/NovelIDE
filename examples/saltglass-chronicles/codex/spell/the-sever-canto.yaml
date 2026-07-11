@@ -1,0 +1,11 @@
+id: the-sever-canto
+name: Rivenmark
+type: spell
+aliases:
+- the Sever Canto
+summary: Cuts as though by an unseen tide-blade — invented by the young Cassian Dorn, and used against
+  its own maker's allies before anyone knew its name.
+fields:
+  incantation: Rivenmark
+  type: forbidden canto
+  effect: opens deep slashing wounds

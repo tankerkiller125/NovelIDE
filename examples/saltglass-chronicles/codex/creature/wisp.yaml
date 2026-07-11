@@ -1,0 +1,10 @@
+id: wisp
+name: Wisp
+type: creature
+summary: Hollis's pyre-heron — burns to ash and rises again, carries impossible weights, weeps mending
+  tears, and leaves Thornfall forever with one last cry.
+fields:
+  classification: pyre-heron
+relations:
+- type: pet-of
+  to: eamon-hollis

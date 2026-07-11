@@ -1,0 +1,10 @@
+id: the-turnglass
+name: the Turnglass
+type: item
+summary: An hourglass on a chain that winds the tide back; issued to Odile for classes, spent instead
+  on saving a tidesteed and a godfather in a single night.
+fields:
+  powers: short-range time-turning
+status:
+- state: intact
+  note: The Concord's whole stock is smashed in the Vault of Tides battle in book 5.

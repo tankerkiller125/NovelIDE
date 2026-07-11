@@ -1,0 +1,10 @@
+id: moonsbane-draught
+name: Moonsbane Draught
+type: potion
+aliases:
+- Moonsbane
+summary: Fiendishly hard to brew; Dorn's monthly gobletful is what makes Rowan Thistle's teaching year
+  possible.
+fields:
+  effect: keeps a moon-touched weaver in their right mind through the change
+  difficulty: extremely advanced

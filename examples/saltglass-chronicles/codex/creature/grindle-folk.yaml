@@ -1,0 +1,9 @@
+id: grindle-folk
+name: the grindle-folk
+type: creature
+aliases:
+- grindle
+summary: Bankers and master smiths with a long memory for a weaver's betrayals — to a grindle, the maker
+  owns the made, whatever a weaver paid for it.
+fields:
+  classification: being

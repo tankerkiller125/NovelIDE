@@ -1,0 +1,16 @@
+id: halruun
+name: Halruun
+type: character
+aliases:
+- Halruun of the Starkin
+summary: The Starkin who carried Wren to safety through the Shrouded Wood — cast out by his herd for serving
+  weavers as Thornfall's star-reader.
+fields:
+  lineage: starkin
+status:
+- state: alive
+relations:
+- type: teaches
+  to: thornfall-conservatory
+  from:
+    book: 05-the-drowned-court

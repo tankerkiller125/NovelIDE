@@ -1,0 +1,23 @@
+id: finn-dabb
+name: Finn Dabb
+type: character
+aliases:
+- Finn
+summary: Unwoven-born with a tide-lens and boundless awe of Wren; sneaks back underage to fight and die
+  in the siege.
+fields:
+  order: Riptide
+  lineage: unwoven-born
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Killed in the siege; Tobin and Darrow carry his body in.
+relations:
+- type: member-of
+  to: riptide-order
+- type: member-of
+  to: wrens-watch
+  from:
+    book: 05-the-drowned-court

@@ -1,0 +1,9 @@
+id: the-chalice-of-flame
+name: the Chalice of Flame
+type: item
+summary: An impartial flame-filled cup that chooses each school's Trine champion — until a beguiled fourth
+  name rises from it.
+fields:
+  powers: binding contest-oath
+status:
+- state: intact

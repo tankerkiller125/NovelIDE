@@ -1,0 +1,19 @@
+id: anselm-varga
+name: Anselm Varga
+type: character
+aliases:
+- Varga
+summary: Kaldmarch's stormy skiff-catcher and Trine champion; takes Odile to the Tide-Ball and never quite
+  gets over it.
+fields:
+  lineage: woven
+  occupation: champion skiff-catcher
+status:
+- state: alive
+relations:
+- type: member-of
+  to: kaldmarch-institute
+- type: loves
+  to: odile-sarkany
+  from:
+    book: 04-the-trine-tournament

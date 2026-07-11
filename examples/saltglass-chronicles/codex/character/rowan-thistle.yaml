@@ -1,0 +1,32 @@
+id: rowan-thistle
+name: Rowan Thistle
+type: character
+aliases:
+- Master Thistle
+- the Grey Wolf
+summary: Moon-touched warding-master and the best teacher Wren ever had; a Nightstray who falls in the
+  siege of Thornfall.
+fields:
+  lineage: moon-touched
+  beacon: wolf
+  occupation: Warding-master (book 3)
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Killed in the siege; the narrative shows his body, not his killer.
+relations:
+- type: member-of
+  to: the-nightstray
+- type: member-of
+  to: order-of-the-grey-dawn
+- type: created
+  to: the-wanderers-chart
+- type: married-to
+  to: nessa-brightwater
+  from:
+    book: 07-the-last-canto
+- type: mentor-of
+  to: wren-alcott
+  note: Taught her the beacon-canto.

@@ -1,0 +1,46 @@
+id: cassian-dorn
+name: Cassian Dorn
+type: character
+aliases:
+- Master Dorn
+- the Tidemaster
+summary: Thornfall's severe tide-master and the saga's great ambiguity — a former Saltsworn whose love
+  for Miriel Alcott bound him to Hollis's side.
+fields:
+  order: Undertow
+  lineage: half-woven
+  beacon: vixen
+  occupation: Tidemaster (books 1-5), Warding-master (book 6), Headmaster (book 7)
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Killed by Nharla in the Wailing Boathouse on Mirehold's order; gives Wren his memories as he dies.
+relations:
+- type: member-of
+  to: the-saltsworn
+  until:
+    book: 01-the-marked-tide
+  note: Turned before the saga out of remorse when Mirehold marked Miriel; a Saltsworn in name only, as
+    a spy.
+- type: member-of
+  to: order-of-the-grey-dawn
+  note: Hollis's agent inside the Drowned King's circle.
+- type: serves
+  to: eamon-hollis
+- type: loves
+  to: miriel-alcott
+  note: The reason behind everything, revealed in the tide-master's memories.
+- type: killed
+  to: eamon-hollis
+  from:
+    book: 06-the-reliquary
+  note: By prior arrangement — Hollis was already dying of the signet's curse and asked it to spare Julian's
+    soul and hold Dorn's cover.
+- type: created
+  to: the-sever-canto
+- type: teaches
+  to: thornfall-conservatory
+  until:
+    book: 07-the-last-canto

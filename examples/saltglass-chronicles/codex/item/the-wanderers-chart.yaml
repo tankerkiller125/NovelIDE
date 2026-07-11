@@ -1,0 +1,13 @@
+id: the-wanderers-chart
+name: the Wanderer's Chart
+type: item
+aliases:
+- the Chart
+summary: The Nightstray's masterwork — a living chart of Thornfall showing everyone within it, unfooled
+  by skinbrew or skinshift. Confiscated for years, then gifted to Wren.
+fields:
+  maker: the Nightstray
+  powers: shows all of Thornfall and everyone in it
+status:
+- state: intact
+  note: Handed to Wren by Cade in the third book.

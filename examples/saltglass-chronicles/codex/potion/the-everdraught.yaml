@@ -1,0 +1,9 @@
+id: the-everdraught
+name: the Everdraught
+type: potion
+aliases:
+- the Tidewater of Life
+summary: Distilled from the Tidestone; holds death at bay, but must be drunk with every tide — immortality
+  on a tether.
+fields:
+  effect: extends life indefinitely

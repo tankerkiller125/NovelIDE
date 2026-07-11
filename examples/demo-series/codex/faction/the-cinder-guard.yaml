@@ -1,0 +1,9 @@
+id: the-cinder-guard
+name: the Cinder Guard
+type: faction
+summary: Elite order sworn to the Ember Throne; keepers of the Ash Gate.
+fields:
+  seat: Emberfall
+relations:
+  - type: located-in
+    to: emberfall

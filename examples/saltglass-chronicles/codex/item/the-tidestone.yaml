@@ -1,0 +1,14 @@
+id: the-tidestone
+name: the Tidestone
+type: item
+summary: The legendary stone of the sea-alchemist Perenna Flask — turns dross to gold and yields the Everdraught.
+  Guarded beneath Thornfall, and unmade by agreement once the Drowned King comes for it.
+fields:
+  maker: Perenna Flask
+  powers: transmutation; the Everdraught
+status:
+- state: intact
+- state: destroyed
+  at:
+    book: 01-the-marked-tide
+  note: Hollis and Flask agree to unmake it after Frey's attempt.

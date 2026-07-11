@@ -1,0 +1,8 @@
+id: shell-and-bone-cottage
+name: Shell-and-Bone Cottage
+type: location
+summary: Cade and Amelie's clifftop home by the sea — refuge after Mirehold Keep, and the place where
+  Pib is buried without weaving.
+fields:
+  type: cottage
+  region: the western cliffs, near Tinmouth

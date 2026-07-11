@@ -1,0 +1,21 @@
+id: barnaby-crole-sr
+name: Barnaby Crole
+type: character
+aliases:
+- Warden Crole
+summary: Rigid Concord official who sent his own son to Bleakhold — and then secretly freed him, a mercy
+  that kills him.
+fields:
+  lineage: woven
+  occupation: Head of Inter-Isles Concord
+status:
+- state: alive
+- state: dead
+  at:
+    book: 04-the-trine-tournament
+  note: Murdered by his own son and shaped into driftwood, buried in Bogdan's garden.
+relations:
+- type: serves
+  to: tidal-concord
+- type: parent-of
+  to: lucan-crole

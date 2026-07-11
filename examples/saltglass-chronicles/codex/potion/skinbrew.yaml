@@ -1,0 +1,11 @@
+id: skinbrew
+name: Skinbrew
+type: potion
+aliases:
+- Mirrorbrew
+summary: Transforms the drinker into another person — human shapes only, as Odile's cat-hair mishap proves.
+  Brewed illegally by second-years; a whole year's disguise for Lucan Crole.
+fields:
+  effect: assume another person's shape for an hour
+  appearance: silt-thick, changes with the added hair
+  difficulty: very advanced

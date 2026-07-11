@@ -1,0 +1,12 @@
+id: mordath
+name: Mordath
+type: spell
+aliases:
+- the Ending Canto
+summary: Instant, unblockable death; one of the three Forbidden Cantos. Wren alone is known to have survived
+  it.
+fields:
+  incantation: Mordath
+  type: forbidden canto
+  effect: instant death
+  light: black-green

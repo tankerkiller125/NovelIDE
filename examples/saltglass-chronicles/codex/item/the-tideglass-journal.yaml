@@ -1,0 +1,13 @@
+id: the-tideglass-journal
+name: the Tideglass Journal
+type: item
+summary: The Drowned King's first reliquary — a memory of his sixteen-year-old self that possesses a Marsh
+  child and reopens the Sunken Warren.
+fields:
+  type: reliquary
+status:
+- state: intact
+- state: destroyed
+  at:
+    book: 02-the-sunken-warren
+  note: Pierced by Wren with a Leviathan fang in the Warren.

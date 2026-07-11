@@ -1,0 +1,8 @@
+id: thornbys-lensery
+name: Thornby's Lensery
+type: location
+summary: Makers of fine lensets since the founders' age; narrow, dusty, and the place where the lenset
+  chooses the weaver.
+fields:
+  type: shop
+  region: the Coilrow, Port Meridian

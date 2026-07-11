@@ -1,0 +1,9 @@
+id: fathomkin
+name: the fathomkin
+type: creature
+aliases:
+- fathomkin
+summary: Sea-cliff giants driven near to nothing by weavers; both sides court the last of them in both
+  wars.
+fields:
+  classification: being

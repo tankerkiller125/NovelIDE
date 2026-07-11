@@ -1,0 +1,14 @@
+id: the-first-weaver-conch
+name: the First-Weaver Conch
+type: item
+summary: Sabine Vex's heirloom turned reliquary; swapped for a forgery by Alric Mirehold, looted from
+  Vell House, worn like a poison at the trio's throats.
+fields:
+  type: reliquary
+status:
+- state: intact
+- state: destroyed
+  at:
+    book: 07-the-last-canto
+  note: Split by Perrin with the Sword of Storrow at the forest tide-pool, after it shows him his worst
+    fears.

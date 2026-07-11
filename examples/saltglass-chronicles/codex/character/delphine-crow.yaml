@@ -1,0 +1,26 @@
+id: delphine-crow
+name: Delphine Crow
+type: character
+aliases:
+- Inquisitor Crow
+summary: Concord inquisitor in dove-grey who tortures students with a bleeding quill and later chairs
+  the Lineage Commission.
+fields:
+  order: Undertow
+  lineage: woven
+  occupation: Warding-master and High Inquisitor (book 5)
+status:
+- state: alive
+relations:
+- type: serves
+  to: tidal-concord
+- type: teaches
+  to: thornfall-conservatory
+  from:
+    book: 05-the-drowned-court
+  until:
+    book: 06-the-reliquary
+- type: leads
+  to: the-wardens-watch
+- type: enemy-of
+  to: wrens-watch

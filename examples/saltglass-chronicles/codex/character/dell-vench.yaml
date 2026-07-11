@@ -1,0 +1,16 @@
+id: dell-vench
+name: Dell Vench
+type: character
+aliases:
+- Vench
+summary: The other half of Julian's muscle; survives the Room of Want fire that takes Gorrel.
+fields:
+  order: Undertow
+  lineage: woven
+status:
+- state: alive
+relations:
+- type: member-of
+  to: undertow-order
+- type: serves
+  to: julian-ashenford

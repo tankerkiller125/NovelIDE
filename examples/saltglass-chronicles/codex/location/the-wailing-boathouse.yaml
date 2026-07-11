@@ -1,0 +1,8 @@
+id: the-wailing-boathouse
+name: the Wailing Boathouse
+type: location
+summary: The most haunted building on the Isles — in truth a young moon-touched weaver's monthly refuge,
+  reached by the strangle-willow's tunnel. Dorn dies here.
+fields:
+  type: abandoned building
+  region: Hollowmere

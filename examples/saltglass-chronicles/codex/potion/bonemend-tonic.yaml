@@ -1,0 +1,6 @@
+id: bonemend-tonic
+name: Bonemend Tonic
+type: potion
+summary: Regrows a whole arm — Wren's, after Gaultier Plume vanished the bones instead of mending them.
+fields:
+  effect: regrows missing bone overnight, painfully

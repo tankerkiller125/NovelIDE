@@ -1,0 +1,13 @@
+id: the-brine-crown
+name: the Brine Crown
+type: item
+summary: A circlet of hardened sea-salt the Drowned King drowned a shard of his self within; hidden in
+  the vaults of Mirehold Keep.
+fields:
+  type: reliquary
+status:
+- state: intact
+- state: destroyed
+  at:
+    book: 07-the-last-canto
+  note: Stabbed by Odile with a Leviathan fang during the sack of Mirehold Keep.

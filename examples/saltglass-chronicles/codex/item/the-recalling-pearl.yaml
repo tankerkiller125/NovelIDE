@@ -1,0 +1,16 @@
+id: the-recalling-pearl
+name: the Recalling Pearl
+type: item
+aliases:
+- the Wakestone
+summary: The second Relic — calls back the shades of the dead. Set by the Drowned King into the signet
+  reliquary without his knowing what it was; Wren turns it thrice in the Shrouded Wood and walks to her
+  death accompanied.
+fields:
+  type: Saltglass Relic
+status:
+- state: intact
+- state: lost
+  at:
+    book: 07-the-last-canto
+  note: Slips from Wren's numb fingers in the Shrouded Wood, deliberately unrecovered.

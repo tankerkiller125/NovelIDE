@@ -1,0 +1,23 @@
+id: perrin-marsh
+name: Perrin Marsh
+type: character
+aliases:
+- Perrin
+summary: Wren's steadfast friend and the middle Marsh child; a skiff-rider with more courage than caution.
+fields:
+  order: Riptide
+  lineage: woven
+  beacon: otter-hound
+status:
+- state: alive
+relations:
+- type: member-of
+  to: riptide-order
+- type: member-of
+  to: wrens-watch
+  from:
+    book: 05-the-drowned-court
+- type: loves
+  to: odile-sarkany
+  from:
+    book: 06-the-reliquary

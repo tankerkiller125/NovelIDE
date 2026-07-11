@@ -1,0 +1,12 @@
+id: the-galeworth-skiff
+name: the Galeworth
+type: item
+summary: Wren's first skiff, bought after one reckless dive proved her a natural catcher.
+fields:
+  type: racing skiff
+status:
+- state: intact
+- state: destroyed
+  at:
+    book: 03-the-sablefen-pact
+  note: Blown into the strangle-willow during the Griever match.

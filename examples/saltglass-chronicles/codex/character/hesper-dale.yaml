@@ -1,0 +1,17 @@
+id: hesper-dale
+name: Hesper Dale
+type: character
+aliases:
+- Mistress Dale
+summary: Greenwork mistress and head of Millpond; her tide-lilies revive the petrified in the second year.
+fields:
+  order: Millpond
+  lineage: woven
+  occupation: Greenwork mistress
+status:
+- state: alive
+relations:
+- type: teaches
+  to: thornfall-conservatory
+- type: leads
+  to: millpond-order

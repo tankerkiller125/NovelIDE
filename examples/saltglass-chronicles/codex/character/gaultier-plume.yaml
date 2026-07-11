@@ -1,0 +1,22 @@
+id: gaultier-plume
+name: Gaultier Plume
+type: character
+aliases:
+- Master Plume
+summary: Celebrity fraud who stole other weavers' deeds with memory-cantos — until a broken lenset turned
+  his own forgetting back on him.
+fields:
+  order: Springtide
+  lineage: woven
+  occupation: Warding-master (book 2)
+status:
+- state: alive
+- state: memory lost
+  at:
+    book: 02-the-sunken-warren
+  note: His own backfiring memory-canto; a permanent resident of the Menders' Hall thereafter.
+relations:
+- type: teaches
+  to: thornfall-conservatory
+  until:
+    book: 02-the-sunken-warren

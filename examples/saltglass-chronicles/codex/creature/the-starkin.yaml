@@ -1,0 +1,9 @@
+id: the-starkin
+name: the Starkin
+type: creature
+aliases:
+- Starkin
+summary: Proud, star-reading horse-folk of the Shrouded Wood, who name themselves beasts rather than share
+  'being' with weavers.
+fields:
+  classification: beast (by their own insistence)

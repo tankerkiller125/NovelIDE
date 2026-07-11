@@ -1,0 +1,251 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+# Each platform builds on its own native runner — Wails cannot cross-compile
+# the webview layer (WebKitGTK on Linux, WebView2 on Windows, WKWebView on
+# macOS). Every job uploads its archive as a workflow artifact; the final
+# `release` job gathers them all and attaches them to one GitHub release.
+
+jobs:
+  linux:
+    name: Linux (binary + vendored source)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "tag '$TAG' is not vX.Y.Z" >&2
+            exit 1
+          fi
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install GTK/WebKit dev headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - name: Vendored source tarball (also builds frontend + vendor/)
+        run: ./build/flatpak/make-vendored-tarball.sh "$VERSION"
+
+      - name: Linux binary + archive
+        run: |
+          mkdir -p dist
+          go build -mod=vendor -trimpath -buildvcs=false \
+            -tags desktop,production,webkit2_41 -ldflags "-s -w" \
+            -o dist/novelide .
+          tar -C dist -czf "dist/novelide-$VERSION-linux-amd64.tar.gz" novelide
+          rm dist/novelide
+          # --- Flathub publishing temporarily disabled ---
+          # The vendored source tarball is still built above (the flatpak
+          # job needs it) but is NOT attached to the release. Re-enable
+          # Flathub distribution by uncommenting the copy below.
+          # cp build/flatpak/novelide-"$VERSION"-vendored.tar.xz \
+          #    build/flatpak/novelide-"$VERSION"-vendored.tar.xz.sha256 dist/
+
+      - name: Upload release archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: dist/*
+
+      - name: Upload vendored source for the flatpak job
+        uses: actions/upload-artifact@v4
+        with:
+          name: vendored-src
+          path: build/flatpak/novelide-*-vendored.tar.xz
+          retention-days: 7
+
+  windows:
+    name: Windows (amd64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate tag
+        shell: bash
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "tag '$TAG' is not vX.Y.Z" >&2
+            exit 1
+          fi
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
+
+      - name: Build
+        shell: pwsh
+        run: |
+          $env:Path += ";$env:USERPROFILE\go\bin"
+          wails build -platform windows/amd64 -clean
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path build/bin/novelide.exe `
+            -DestinationPath "dist/novelide-$env:VERSION-windows-amd64.zip"
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: dist/*
+
+  macos:
+    name: macOS (universal)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "tag '$TAG' is not vX.Y.Z" >&2
+            exit 1
+          fi
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
+
+      - name: Build (universal — Intel + Apple Silicon)
+        run: |
+          export PATH="$PATH:$(go env GOPATH)/bin"
+          wails build -platform darwin/universal -clean
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          # ditto is the macOS-correct way to zip a .app bundle (preserves
+          # symlinks and bundle structure that plain zip would mangle).
+          ditto -c -k --keepParent build/bin/novelide.app \
+            "dist/novelide-$VERSION-macos-universal.zip"
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: dist/*
+
+  flatpak:
+    name: Flatpak bundle
+    needs: linux
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
+      options: --privileged
+    steps:
+      - name: Validate tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "tag '$TAG' is not vX.Y.Z" >&2
+            exit 1
+          fi
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+
+      - name: Fetch vendored source
+        uses: actions/download-artifact@v4
+        with:
+          name: vendored-src
+
+      - name: Unpack source tree
+        run: |
+          tar -xJf "novelide-$VERSION-vendored.tar.xz"
+          mv "novelide-$VERSION-vendored" src
+
+      - name: Install Go SDK extension
+        run: |
+          flatpak install -y --noninteractive flathub \
+            org.freedesktop.Sdk.Extension.golang//25.08 || \
+          flatpak install -y --noninteractive --user flathub \
+            org.freedesktop.Sdk.Extension.golang//25.08
+
+      - name: flatpak-builder
+        run: |
+          flatpak-builder --force-clean --repo=repo --disable-rofiles-fuse \
+            build-dir src/build/flatpak/dev.kilgore.NovelIDE.yml
+
+      - name: Bundle
+        run: |
+          mkdir -p dist
+          flatpak build-bundle repo "dist/novelide-$VERSION.flatpak" dev.kilgore.NovelIDE
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-flatpak
+          path: dist/*
+
+  release:
+    name: Publish GitHub release
+    needs: [linux, windows, macos, flatpak]
+    # Publish as long as the three native builds succeeded; the flatpak
+    # bundle (most fragile — external container, network) is attached if it
+    # made it, but its failure never blocks the release.
+    if: >-
+      always() &&
+      needs.linux.result == 'success' &&
+      needs.windows.result == 'success' &&
+      needs.macos.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gather all platform archives
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create release with every archive attached
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true

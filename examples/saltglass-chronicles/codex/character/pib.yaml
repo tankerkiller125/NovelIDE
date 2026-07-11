@@ -1,0 +1,26 @@
+id: pib
+name: Pib
+type: character
+aliases:
+- Pib the hob
+summary: The Ashenfords' abused house-hob, freed by a knotted rag and fiercely loyal to Wren; dies pulling
+  prisoners out of Mirehold Keep.
+fields:
+  lineage: hob
+status:
+- state: alive
+- state: freed
+  at:
+    book: 02-the-sunken-warren
+  note: Freed when Wren tricks Rennick Ashenford with a rag folded into the journal.
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Vespera's salt-knife, thrown as he tide-stepped the prisoners to Shell-and-Bone Cottage.
+relations:
+- type: serves
+  to: rennick-ashenford
+  until:
+    book: 02-the-sunken-warren
+- type: allied-with
+  to: wren-alcott

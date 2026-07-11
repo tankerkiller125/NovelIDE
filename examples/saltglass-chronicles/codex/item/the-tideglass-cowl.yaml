@@ -1,0 +1,11 @@
+id: the-tideglass-cowl
+name: the Tideglass Cowl
+type: item
+aliases:
+- the Sorting Cowl
+summary: Aldric Storrow's enchanted cowl, sorting first-years into their Orders for a thousand tides —
+  and hiding a sword for those who need it.
+fields:
+  maker: the four founders
+status:
+- state: intact

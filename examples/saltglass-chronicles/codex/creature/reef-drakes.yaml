@@ -1,0 +1,9 @@
+id: reef-drakes
+name: reef-drakes
+type: creature
+aliases:
+- reef-drake
+summary: Sea-dragons of the reef, hoarded and hunted; a nesting drake is the first trial of the Trine
+  Tournament.
+fields:
+  classification: beast, five-tide

@@ -1,0 +1,8 @@
+id: the-sunken-warren
+name: the Sunken Warren
+type: location
+summary: Sabine Vex's flooded warren beneath the school, opened only in tidespeech through a washroom
+  drain — home to a thousand-tide Leviathan.
+fields:
+  type: hidden chamber
+  region: beneath Thornfall

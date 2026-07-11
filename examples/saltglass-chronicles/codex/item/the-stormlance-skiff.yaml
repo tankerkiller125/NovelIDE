@@ -1,0 +1,13 @@
+id: the-stormlance-skiff
+name: the Stormlance
+type: item
+summary: The fastest wind-skiff on the Isles — an anonymous midwinter gift that proves to be from Dorian,
+  making up for ten missed name-days.
+fields:
+  type: racing skiff
+status:
+- state: intact
+- state: lost
+  at:
+    book: 07-the-last-canto
+  note: Falls from Bogdan's sky-barge during the flight of the seven decoys.

@@ -1,0 +1,24 @@
+id: luthien-quess
+name: Luthien Quess
+type: character
+aliases:
+- Luthien
+- Loony Quess
+summary: Dreamy Springtide seer who sees tide-mares and truths nobody else will; unshakeable in every
+  fight that matters.
+fields:
+  order: Springtide
+  lineage: woven
+  beacon: hare
+status:
+- state: alive
+relations:
+- type: member-of
+  to: springtide-order
+- type: member-of
+  to: wrens-watch
+  from:
+    book: 05-the-drowned-court
+- type: parent-of
+  to: alder-quess
+  note: Alder is her father; relation reads from his side.

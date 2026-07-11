@@ -1,0 +1,20 @@
+id: amelie-brvolar
+name: Amelie Brvolar
+type: character
+aliases:
+- Amelie
+summary: Aurelon's part-siren Trine champion; marries Cade Marsh and shelters the trio at Shell-and-Bone
+  Cottage.
+fields:
+  lineage: part-siren
+status:
+- state: alive
+relations:
+- type: member-of
+  to: aurelon-lyceum
+- type: married-to
+  to: cade-marsh
+  from:
+    book: 07-the-last-canto
+- type: owns
+  to: shell-and-bone-cottage

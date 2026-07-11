@@ -1,0 +1,43 @@
+id: wren-alcott
+name: Wren Alcott
+type: character
+aliases:
+- Wren
+- the Marked
+- the Tideborn
+summary: Orphaned as an infant when the Drowned King's death-canto broke against her; a Riptide weaver
+  and the subject of the Saltmere prophecy.
+fields:
+  order: Riptide
+  lineage: half-woven
+  focus: storm-glass lenset
+  beacon: sea-hawk
+  hair: dark
+  eyes: grey
+  born: the year of the low tide
+status:
+- state: alive
+relations:
+- type: member-of
+  to: riptide-order
+- type: leads
+  to: wrens-watch
+  from:
+    book: 05-the-drowned-court
+- type: enemy-of
+  to: corvane-mirehold
+- type: loves
+  to: elsie-marsh
+  from:
+    book: 06-the-reliquary
+- type: owns
+  to: the-fogmantle
+- type: owns
+  to: the-wanderers-chart
+  from:
+    book: 03-the-sablefen-pact
+- type: owns
+  to: the-sovereign-lens
+  from:
+    book: 07-the-last-canto
+  note: Becomes its true master by disarming Julian Ashenford at Mirehold Keep.

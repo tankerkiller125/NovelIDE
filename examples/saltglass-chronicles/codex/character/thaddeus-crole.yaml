@@ -1,0 +1,16 @@
+id: thaddeus-crole
+name: Thaddeus Crole
+type: character
+aliases:
+- the Grey Lecturer
+summary: The only ghost on Thornfall's staff; drowned in the tide-hall and rose to lecture on history
+  without noticing.
+fields:
+  lineage: shade
+  occupation: History lecturer
+status:
+- state: shade
+  note: Drowned long before the saga; lectures on regardless.
+relations:
+- type: teaches
+  to: thornfall-conservatory

@@ -1,0 +1,29 @@
+id: marisol-quill
+name: Marisol Quill
+type: character
+aliases:
+- Mistress Quill
+- the Deputy
+summary: Shaping-mistress, deputy head, and the spine of Thornfall; cut down defending the school during
+  the Concord's purge.
+fields:
+  order: Riptide
+  lineage: woven
+  occupation: Shaping-mistress, Deputy Headmistress
+status:
+- state: alive
+- state: dead
+  at:
+    book: 05-the-drowned-court
+  note: Killed holding the gate against Inquisitor Crow's wardens.
+relations:
+- type: teaches
+  to: thornfall-conservatory
+  until:
+    book: 05-the-drowned-court
+- type: leads
+  to: riptide-order
+  until:
+    book: 05-the-drowned-court
+- type: member-of
+  to: order-of-the-grey-dawn

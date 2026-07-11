@@ -1,0 +1,9 @@
+id: hobs
+name: hobs
+type: creature
+aliases:
+- hob
+summary: Bound servants of the old weaving houses, wielding fierce magic of their own — freed only by
+  a gift of cloth.
+fields:
+  classification: being

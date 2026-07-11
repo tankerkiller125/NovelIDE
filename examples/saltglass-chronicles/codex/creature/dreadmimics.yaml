@@ -1,0 +1,9 @@
+id: dreadmimics
+name: dreadmimics
+type: creature
+aliases:
+- dreadmimic
+summary: Shape-thieves that become whatever you most fear — no one knows what one looks like alone in
+  the dark.
+fields:
+  classification: non-being

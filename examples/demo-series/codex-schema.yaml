@@ -1,0 +1,67 @@
+types:
+  - id: character
+    label: Character
+    icon: 👤
+    fields: [age, appearance, goal, flaw]
+  - id: location
+    label: Location
+    icon: 🗺
+    fields: [region, population, ruler]
+  - id: item
+    label: Item
+    icon: ⚔
+    fields: [origin, powers]
+  - id: faction
+    label: Faction
+    icon: 🏰
+    fields: [leader, seat, goal]
+  - id: arc
+    label: Arc / Thread
+    icon: 🧵
+    fields: [premise, payoff]
+  - id: concept
+    label: Concept
+    icon: ✦
+relations:
+  - id: parent-of
+    label: parent of
+    inverseLabel: child of
+  - id: sibling-of
+    label: sibling of
+    symmetric: true
+  - id: married-to
+    label: married to
+    symmetric: true
+  - id: loves
+    label: loves
+    inverseLabel: loved by
+  - id: mentor-of
+    label: mentor of
+    inverseLabel: student of
+  - id: allied-with
+    label: allied with
+    symmetric: true
+  - id: enemy-of
+    label: enemy of
+    symmetric: true
+  - id: member-of
+    label: member of
+    inverseLabel: has member
+  - id: leads
+    label: leads
+    inverseLabel: led by
+  - id: serves
+    label: serves
+    inverseLabel: served by
+  - id: owns
+    label: owns
+    inverseLabel: owned by
+  - id: created
+    label: created
+    inverseLabel: created by
+  - id: killed
+    label: killed
+    inverseLabel: killed by
+  - id: located-in
+    label: located in
+    inverseLabel: contains

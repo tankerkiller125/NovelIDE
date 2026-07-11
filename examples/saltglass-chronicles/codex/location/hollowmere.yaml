@@ -1,0 +1,8 @@
+id: hollowmere
+name: Hollowmere
+type: location
+summary: The only all-weaver village on the Isles, a walk from Thornfall — the Salted Gull, the sweet-shop,
+  and third-years with signed leave.
+fields:
+  type: village
+  region: near Thornfall

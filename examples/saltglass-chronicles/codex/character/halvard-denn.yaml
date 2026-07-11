@@ -1,0 +1,17 @@
+id: halvard-denn
+name: Halvard Denn
+type: character
+aliases:
+- Denn the Patient
+summary: Founder who took the rest and prized fairness and toil; his cup becomes one of the Drowned King's
+  reliquaries.
+fields:
+  lineage: woven
+status:
+- state: dead
+  note: Died a thousand tides before the saga.
+relations:
+- type: created
+  to: millpond-order
+- type: created
+  to: the-denn-cup

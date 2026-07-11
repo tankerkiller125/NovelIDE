@@ -1,0 +1,11 @@
+id: the-wynn-circlet
+name: Wynn's Circlet
+type: item
+summary: Orla Wynn's lost circlet of wit — hidden in the Room of Want, in the school everyone swore the
+  young Mirehold never entered.
+status:
+- state: intact
+- state: recovered
+  at:
+    book: 07-the-last-canto
+  note: Found among the hidden things of the Room of Want during the siege.

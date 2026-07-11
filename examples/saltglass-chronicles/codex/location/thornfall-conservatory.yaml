@@ -1,0 +1,17 @@
+id: thornfall-conservatory
+name: Thornfall Conservatory
+type: location
+aliases:
+- Thornfall
+- the Conservatory
+summary: The thousand-tide conservatory on a tidal isle — shifting stairs, singing portraits, and more
+  secrets than any Headmaster has ever known.
+fields:
+  type: school
+  region: the Meridian Isles
+status:
+- state: standing
+- state: besieged
+  at:
+    book: 07-the-last-canto
+  note: Occupied under Dorn's headship, then half-drowned in the final siege.

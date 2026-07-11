@@ -1,0 +1,14 @@
+id: fenris-graff
+name: Fenris Graff
+type: character
+aliases:
+- Graff
+summary: Savage moon-touched who chooses to maul children — the one who turned Rowan Thistle, and who
+  scars Cade and Prue.
+fields:
+  lineage: moon-touched
+status:
+- state: alive
+relations:
+- type: allied-with
+  to: the-saltsworn

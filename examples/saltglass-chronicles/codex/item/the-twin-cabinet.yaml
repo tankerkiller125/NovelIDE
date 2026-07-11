@@ -1,0 +1,14 @@
+id: the-twin-cabinet
+name: the Twin Cabinet
+type: item
+summary: One of a broken pair linking Thornfall to a shop on the Blackwash; Julian's year-long repair
+  smuggles Saltsworn into the school.
+fields:
+  powers: passage to its twin
+status:
+- state: broken
+  note: Damaged by a poltergeist in the second book.
+- state: repaired
+  at:
+    book: 06-the-reliquary
+  note: Mended by Julian in the Room of Want.

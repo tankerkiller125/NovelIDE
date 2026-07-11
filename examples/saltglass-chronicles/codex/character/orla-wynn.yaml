@@ -1,0 +1,17 @@
+id: orla-wynn
+name: Orla Wynn
+type: character
+aliases:
+- Wynn the Wise
+summary: Founder who prized wit; her lost circlet, stolen by her daughter and defiled by the young Mirehold,
+  hides in the school all along.
+fields:
+  lineage: woven
+status:
+- state: dead
+  note: Died a thousand tides before the saga.
+relations:
+- type: created
+  to: springtide-order
+- type: created
+  to: the-wynn-circlet

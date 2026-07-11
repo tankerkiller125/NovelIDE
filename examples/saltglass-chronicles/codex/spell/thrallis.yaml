@@ -1,0 +1,11 @@
+id: thrallis
+name: Thrallis
+type: spell
+aliases:
+- the Binding Canto
+summary: Places the victim wholly under the singer's will; one of the three Forbidden Cantos. Wren alone
+  in her year can throw it off.
+fields:
+  incantation: Thrallis
+  type: forbidden canto
+  effect: total control of the victim

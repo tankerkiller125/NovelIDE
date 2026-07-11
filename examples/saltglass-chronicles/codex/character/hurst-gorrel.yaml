@@ -1,0 +1,21 @@
+id: hurst-gorrel
+name: Hurst Gorrel
+type: character
+aliases:
+- Gorrel
+summary: Julian's hulking crony, deadlier by the last book than anyone expected — killed by the wild-fire
+  he himself unleashed.
+fields:
+  order: Undertow
+  lineage: woven
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Consumed by his own wild-fire canto in the Room of Want.
+relations:
+- type: member-of
+  to: undertow-order
+- type: serves
+  to: julian-ashenford

@@ -1,0 +1,9 @@
+id: skinshift
+name: skinshift
+type: concept
+aliases:
+- skinshifts
+summary: A weaver who can become one particular beast at will — years of work, Concord registration required,
+  and the saga is full of unregistered ones.
+fields:
+  category: shaping

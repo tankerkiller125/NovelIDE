@@ -1,0 +1,30 @@
+id: tobin-hale
+name: Tobin Hale
+type: character
+aliases:
+- Tobin
+summary: The child the prophecy might have chosen; grows from timid greenwork student to the leader of
+  Thornfall's resistance — and beheads Nharla.
+fields:
+  order: Riptide
+  lineage: woven
+  born: the year of the low tide
+status:
+- state: alive
+relations:
+- type: member-of
+  to: riptide-order
+- type: member-of
+  to: wrens-watch
+  from:
+    book: 05-the-drowned-court
+- type: leads
+  to: wrens-watch
+  from:
+    book: 07-the-last-canto
+  note: Leads the resistance inside occupied Thornfall.
+- type: killed
+  to: nharla
+  from:
+    book: 07-the-last-canto
+  note: Beheaded her with the Sword of Storrow, unmaking the last reliquary.

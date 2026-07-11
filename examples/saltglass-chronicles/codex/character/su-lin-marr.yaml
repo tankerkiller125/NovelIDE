@@ -1,0 +1,19 @@
+id: su-lin-marr
+name: Su-Lin Marr
+type: character
+aliases:
+- Su-Lin
+summary: Springtide skiff-catcher; Wren's first fondness, grieving Halden through the fifth book.
+fields:
+  order: Springtide
+  lineage: woven
+  beacon: swan
+status:
+- state: alive
+relations:
+- type: member-of
+  to: springtide-order
+- type: member-of
+  to: wrens-watch
+  from:
+    book: 05-the-drowned-court

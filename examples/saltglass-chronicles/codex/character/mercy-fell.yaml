@@ -1,0 +1,14 @@
+id: mercy-fell
+name: Mercy Fell
+type: character
+aliases:
+- Matron Fell
+summary: Thornfall's matron, who regrows bone and mends the survivors of every book's finale.
+fields:
+  lineage: woven
+  occupation: matron, the mending-ward
+status:
+- state: alive
+relations:
+- type: serves
+  to: thornfall-conservatory

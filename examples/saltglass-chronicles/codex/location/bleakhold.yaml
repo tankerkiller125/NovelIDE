@@ -1,0 +1,8 @@
+id: bleakhold
+name: Bleakhold
+type: location
+summary: The weaver-prison on a drowned North reef, kept by Grievers who eat every glad thought — escape-proof
+  until Dorian Vell.
+fields:
+  type: prison
+  region: the Northern Reefs

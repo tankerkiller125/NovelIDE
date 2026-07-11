@@ -1,0 +1,8 @@
+id: gornhollow-bank
+name: Gornhollow Bank
+type: location
+summary: The grindle-run bank burrowed leagues beneath the harbour — the safest vault on the Isles, robbed
+  exactly twice in the saga.
+fields:
+  type: bank
+  region: the Coilrow, Port Meridian

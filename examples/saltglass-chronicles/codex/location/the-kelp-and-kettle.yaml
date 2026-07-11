@@ -1,0 +1,7 @@
+id: the-kelp-and-kettle
+name: the Kelp and Kettle
+type: location
+summary: The grubby inn only weavers can see, the gateway between the mainland and the Coilrow.
+fields:
+  type: inn
+  region: Port Meridian

@@ -1,0 +1,22 @@
+id: elsie-marsh
+name: Elsie Marsh
+type: character
+aliases:
+- Elsie
+summary: Youngest Marsh and only daughter; a fierce duellist who becomes the heart Wren fights to come
+  home to.
+fields:
+  order: Riptide
+  lineage: woven
+  beacon: vixen
+status:
+- state: alive
+relations:
+- type: member-of
+  to: riptide-order
+- type: member-of
+  to: wrens-watch
+  from:
+    book: 05-the-drowned-court
+- type: loves
+  to: wren-alcott

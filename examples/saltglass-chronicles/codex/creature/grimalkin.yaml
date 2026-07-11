@@ -1,0 +1,19 @@
+id: grimalkin
+name: Grimalkin
+type: creature
+summary: Skint's scrawny, tide-grey cat and second pair of eyes — petrified by the Leviathan, to the school's
+  quiet delight.
+fields:
+  classification: wraith-cat
+status:
+- state: alive
+- state: petrified
+  at:
+    book: 02-the-sunken-warren
+- state: restored
+  at:
+    book: 02-the-sunken-warren
+  note: Revived by tide-lily draught.
+relations:
+- type: pet-of
+  to: mabon-skint

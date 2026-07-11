@@ -1,0 +1,23 @@
+id: eldon-frey
+name: Eldon Frey
+type: character
+aliases:
+- Master Frey
+summary: Stammering warding teacher hosting the Drowned King's shade beneath his hood; burns at Wren's
+  touch and dies when his master flees him.
+fields:
+  lineage: woven
+  occupation: Warding-master (book 1)
+status:
+- state: alive
+- state: dead
+  at:
+    book: 01-the-marked-tide
+  note: Mirehold's shade abandoned their shared body in the tide-engine vault, leaving him to die.
+relations:
+- type: serves
+  to: corvane-mirehold
+- type: teaches
+  to: thornfall-conservatory
+  until:
+    book: 01-the-marked-tide

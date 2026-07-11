@@ -1,0 +1,9 @@
+id: the-moon-touched
+name: the moon-touched
+type: creature
+aliases:
+- moon-touched
+summary: Weavers cursed to change at the full tide-moon; feared and unhirable, which is rather the point
+  of Rowan Thistle.
+fields:
+  classification: human affliction

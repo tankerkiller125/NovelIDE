@@ -1,0 +1,8 @@
+id: heartsnare
+name: Heartsnare
+type: potion
+summary: The strongest love-draught in the Isles — it smells to each drinker of what they love most, and
+  can only counterfeit love, never make it. The Drowned King was conceived under its pull.
+fields:
+  effect: obsessive infatuation (never true love)
+  appearance: mother-of-pearl sheen, spiralling steam

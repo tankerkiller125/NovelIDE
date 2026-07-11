@@ -1,0 +1,24 @@
+id: prue-callow
+name: Prue Callow
+type: character
+aliases:
+- Prue
+summary: Riptide girl and Perrin's sixth-year fling; savaged by Fenris Graff in the siege of Thornfall.
+fields:
+  order: Riptide
+  lineage: woven
+status:
+- state: alive
+- state: gravely wounded
+  at:
+    book: 07-the-last-canto
+  note: Attacked by Graff; her fate is left uncertain.
+relations:
+- type: member-of
+  to: riptide-order
+- type: loves
+  to: perrin-marsh
+  from:
+    book: 06-the-reliquary
+  until:
+    book: 07-the-last-canto

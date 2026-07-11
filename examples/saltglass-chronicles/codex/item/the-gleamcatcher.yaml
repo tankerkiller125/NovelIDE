@@ -1,0 +1,11 @@
+id: the-gleamcatcher
+name: the Gleamcatcher
+type: item
+summary: Hollis's silver device that drinks the light from lamps — and, left to Perrin, carries a voice
+  that leads him home.
+fields:
+  maker: Eamon Hollis
+  powers: captures light; guides its bearer back
+status:
+- state: intact
+  note: Left to Perrin in Hollis's will in the seventh book.

@@ -1,0 +1,8 @@
+id: the-salted-gull
+name: the Salted Gull
+type: location
+summary: Hollowmere's warm, crowded inn — spiced tide-ale with Mistress Rue, and half the plot's overheard
+  conversations.
+fields:
+  type: inn
+  region: Hollowmere

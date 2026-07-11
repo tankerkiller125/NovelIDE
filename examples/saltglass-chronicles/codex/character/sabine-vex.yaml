@@ -1,0 +1,20 @@
+id: sabine-vex
+name: Sabine Vex
+type: character
+aliases:
+- Vex the Deep
+summary: Founder who prized cunning and pure lineage; left the school a tidesinger's legacy coiled beneath
+  it.
+fields:
+  lineage: woven
+status:
+- state: dead
+  note: Died a thousand tides before the saga.
+relations:
+- type: created
+  to: undertow-order
+- type: created
+  to: the-sunken-warren
+- type: created
+  to: the-first-weaver-conch
+  note: The conch was her heirloom long before Mirehold drowned his self in it.

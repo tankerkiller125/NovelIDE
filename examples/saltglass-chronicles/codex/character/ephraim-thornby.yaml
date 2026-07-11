@@ -1,0 +1,23 @@
+id: ephraim-thornby
+name: Ephraim Thornby
+type: character
+aliases:
+- Thornby
+summary: Lensmaker of the Coilrow since the founders' age; abducted and tortured for the lore of the Sovereign
+  Lens.
+fields:
+  lineage: woven
+  occupation: lensmaker
+status:
+- state: alive
+- state: imprisoned
+  at:
+    book: 06-the-reliquary
+  note: Abducted by Mirehold for lens-lore.
+- state: freed
+  at:
+    book: 07-the-last-canto
+  note: Rescued from Mirehold Keep's cellar with Luthien and a Kaldmarch boy.
+relations:
+- type: owns
+  to: thornbys-lensery

@@ -1,0 +1,29 @@
+id: silvo-crane
+name: Silvo Crane
+type: character
+aliases:
+- the Rat of the Nightstray
+- Nibb
+summary: The Nightstray who sold the Alcotts to the Drowned King and hid ten years as the Marshes' pet
+  marsh-rat; his silvered hand turns on him in the end.
+fields:
+  order: Riptide
+  lineage: half-woven
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Throttled by his own silvered hand when a flicker of mercy toward Wren betrayed his master.
+relations:
+- type: member-of
+  to: the-nightstray
+  until:
+    book: 01-the-marked-tide
+  note: Betrayed the Alcotts to Mirehold sixteen years before the saga.
+- type: member-of
+  to: the-saltsworn
+- type: serves
+  to: corvane-mirehold
+- type: created
+  to: the-wanderers-chart

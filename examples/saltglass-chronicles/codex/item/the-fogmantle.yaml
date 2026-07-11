@@ -1,0 +1,13 @@
+id: the-fogmantle
+name: the Fogmantle
+type: item
+aliases:
+- the Mantle of Unseeing
+summary: The third Relic — a true mantle of unseeing that never frays, handed down from Ignatius Vell
+  to the Alcotts. Hollis had it the night the Alcotts died.
+fields:
+  type: Saltglass Relic
+  powers: perfect, permanent unseeing
+status:
+- state: intact
+  note: Passed to Wren anonymously at midwinter of her first year.

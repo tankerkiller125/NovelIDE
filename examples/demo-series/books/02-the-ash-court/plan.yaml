@@ -1,0 +1,8 @@
+chapters:
+  - file: 01-what-remains.md
+    synopsis: Three years on, Kael keeps Aria's sickles sharp. Something walks into his kitchen wearing her smile.
+    status: drafted
+    pov: aria-voss
+    location: emberfall
+    when: "3130-04"
+    arcs: [the-ash-gate-arc]

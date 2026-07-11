@@ -1,0 +1,12 @@
+id: fellstun
+name: Fellstun
+type: spell
+aliases:
+- the Stilling Canto
+summary: Drops the target unconscious in a flash of red; the workhorse of every skirmish from the Vault
+  onward.
+fields:
+  incantation: Fellstun
+  type: canto
+  effect: knocks the target senseless
+  light: red

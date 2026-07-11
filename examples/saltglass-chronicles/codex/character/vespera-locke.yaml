@@ -1,0 +1,32 @@
+id: vespera-locke
+name: Vespera Locke
+type: character
+aliases:
+- Vespera
+summary: The Drowned King's most fanatical lieutenant — broke the Hale family's minds, kills Dorian Vell
+  and the hob Pib, and falls at Rosalind Marsh's hand.
+fields:
+  lineage: woven
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Killed by Rosalind Marsh in the tide-hall, the last Saltsworn to fall before Mirehold.
+relations:
+- type: member-of
+  to: the-saltsworn
+- type: serves
+  to: corvane-mirehold
+- type: killed
+  to: dorian-vell
+  from:
+    book: 03-the-sablefen-pact
+  note: Her canto sent him through the tide-veil in the Vault of Tides.
+- type: killed
+  to: pib
+  from:
+    book: 07-the-last-canto
+  note: Her thrown salt-knife, during the escape from Mirehold Keep.
+- type: sibling-of
+  to: sable-ashenford

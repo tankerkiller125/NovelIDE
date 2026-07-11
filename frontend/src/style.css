@@ -1,0 +1,311 @@
+:root {
+  /* Makes native widgets (select dropdowns, scrollbars, checkboxes) render
+     in their dark variants instead of white. */
+  color-scheme: dark;
+  --nv-bg: #14181f;
+  --nv-panel: #1a1f28;
+  --nv-border: #2a3140;
+  --nv-hover: #232a36;
+  --nv-text: #d9dee7;
+  --nv-muted: #9aa4b5;
+  --nv-faint: #5d6878;
+  --nv-accent: #d98f4e;
+  --nv-error: #e05555;
+  --nv-warning: #d9a23c;
+  --nv-heading: #e8c893;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400;
+  src:
+    local(''),
+    url('assets/fonts/nunito-v16-latin-regular.woff2') format('woff2');
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--nv-bg);
+  color: var(--nv-text);
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu, sans-serif;
+  font-size: 14px;
+}
+
+#app {
+  height: 100vh;
+  overflow: hidden;
+}
+
+input,
+select,
+textarea {
+  background: var(--nv-bg);
+  border: 1px solid var(--nv-border);
+  border-radius: 6px;
+  color: var(--nv-text);
+  padding: 7px 9px;
+  font: inherit;
+  font-size: 13px;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--nv-accent);
+}
+select option,
+select optgroup {
+  background: var(--nv-panel);
+  color: var(--nv-text);
+}
+textarea {
+  resize: vertical;
+}
+
+.btn {
+  background: var(--nv-hover);
+  border: 1px solid var(--nv-border);
+  border-radius: 6px;
+  color: var(--nv-text);
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.btn:hover {
+  border-color: var(--nv-accent);
+}
+.btn.primary {
+  background: var(--nv-accent);
+  border-color: var(--nv-accent);
+  color: #1b1408;
+  font-weight: 600;
+}
+.btn.danger {
+  color: var(--nv-error);
+}
+.btn.icon {
+  padding: 2px 6px;
+  font-size: 11px;
+  line-height: 1;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---- Entity highlighting inside CodeMirror ---- */
+.nv-entity {
+  color: var(--nv-accent);
+  border-bottom: 1px dotted color-mix(in srgb, var(--nv-accent) 65%, transparent);
+  cursor: help;
+}
+.nv-flag-error {
+  text-decoration: underline wavy var(--nv-error) 1.5px;
+  text-underline-offset: 4px;
+}
+.nv-flag-warning {
+  text-decoration: underline wavy var(--nv-warning) 1.5px;
+  text-underline-offset: 4px;
+}
+.nv-flag-info {
+  border-bottom: 1px dashed var(--nv-muted);
+}
+.nv-misspell {
+  text-decoration: underline dotted #e05555 2px;
+  text-underline-offset: 3px;
+}
+
+/* ---- Spelling tooltip ---- */
+.nv-spell-word {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.nv-spell-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.nv-spell-suggestions.none {
+  color: var(--nv-faint);
+  font-size: 12px;
+}
+.nv-spell-suggestion {
+  background: var(--nv-hover);
+  border: 1px solid var(--nv-border);
+  border-radius: 6px;
+  color: var(--nv-text);
+  padding: 3px 10px;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.nv-spell-suggestion:hover {
+  border-color: var(--nv-accent);
+  color: var(--nv-accent);
+}
+
+/* ---- Hover cards ---- */
+.cm-tooltip:has(.nv-card) {
+  background: transparent !important;
+  border: none !important;
+}
+.nv-card {
+  max-width: 360px;
+  background: var(--nv-panel);
+  border: 1px solid var(--nv-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  font-family: 'Nunito', sans-serif;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--nv-text);
+}
+.nv-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.nv-card-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+.nv-card-type {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: var(--nv-hover);
+  color: var(--nv-muted);
+}
+.nv-card-scope {
+  font-size: 10px;
+  color: var(--nv-faint);
+}
+.nv-card-aliases {
+  color: var(--nv-faint);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+.nv-card-summary {
+  margin: 4px 0 6px;
+}
+.nv-card-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 6px 0;
+}
+.nv-card-field-key {
+  display: inline-block;
+  min-width: 90px;
+  color: var(--nv-faint);
+}
+.nv-card-state {
+  display: inline-block;
+  margin: 2px 0 4px;
+  padding: 1px 9px;
+  border-radius: 9px;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+.nv-card-state.ok {
+  background: color-mix(in srgb, #4caf7d 18%, transparent);
+  color: #6fcf97;
+}
+.nv-card-state.gone {
+  background: color-mix(in srgb, var(--nv-error) 18%, transparent);
+  color: var(--nv-error);
+}
+.nv-card-more {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--nv-border);
+}
+.nv-card-more-head {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--nv-faint);
+  margin: 6px 0 3px;
+}
+.nv-card-status-line {
+  font-size: 12px;
+  color: var(--nv-muted);
+}
+.nv-card-status-line.current {
+  color: var(--nv-text);
+  font-weight: 600;
+}
+.nv-card-status-dot {
+  font-size: 9px;
+}
+.nv-card-status-dot.ok {
+  color: #6fcf97;
+}
+.nv-card-status-dot.gone {
+  color: var(--nv-error);
+}
+.nv-card-relation.inactive {
+  color: var(--nv-faint);
+}
+.nv-card-relations {
+  margin: 6px 0 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--nv-border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nv-card-relation {
+  font-size: 12px;
+}
+.nv-card-rel-label {
+  color: var(--nv-faint);
+  font-style: italic;
+}
+.nv-card-rel-time {
+  color: var(--nv-faint);
+  font-size: 10.5px;
+}
+.nv-card-rel-more {
+  color: var(--nv-faint);
+  font-size: 11px;
+}
+.nv-card-flag {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+}
+.nv-card-flag-error {
+  background: color-mix(in srgb, var(--nv-error) 15%, transparent);
+  color: var(--nv-error);
+}
+.nv-card-flag-warning {
+  background: color-mix(in srgb, var(--nv-warning) 15%, transparent);
+  color: var(--nv-warning);
+}
+.nv-card-flag-info {
+  background: var(--nv-hover);
+  color: var(--nv-muted);
+}
+.nv-card-open {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  color: var(--nv-accent);
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+}

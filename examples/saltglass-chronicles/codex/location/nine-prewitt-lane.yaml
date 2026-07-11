@@ -1,0 +1,10 @@
+id: nine-prewitt-lane
+name: Number Nine, Prewitt Lane
+type: location
+aliases:
+- Prewitt Lane
+summary: The Prewitts' aggressively ordinary house, and the cupboard beneath its stairs — Wren's blood-ward
+  anchor until her seventeenth name-day.
+fields:
+  type: unwoven house
+  region: the mainland town of Dunmoor

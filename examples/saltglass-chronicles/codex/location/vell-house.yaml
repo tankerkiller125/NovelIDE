@@ -1,0 +1,18 @@
+id: vell-house
+name: Vell House
+type: location
+aliases:
+- Vellmoor
+summary: The unplottable Vell family town-house — the Grey Dawn's headquarters under a hidden-keeping
+  charm, complete with a shrieking portrait and a reliquary in a cabinet.
+fields:
+  type: town-house
+  region: Port Meridian
+status:
+- state: Grey Dawn headquarters
+  at:
+    book: 05-the-drowned-court
+- state: trio's hideout
+  at:
+    book: 07-the-last-canto
+  note: Abandoned after a Saltsworn slips in on a coat-tail.

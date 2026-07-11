@@ -1,0 +1,8 @@
+id: saltmere-village
+name: Saltmere
+type: location
+summary: The tide-side village where the first weavers landed, the Hollis family broke, the Alcotts died,
+  and their daughter's story began.
+fields:
+  type: village
+  region: the Meridian Isles

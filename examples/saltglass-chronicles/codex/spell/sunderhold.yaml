@@ -1,0 +1,12 @@
+id: sunderhold
+name: Sunderhold
+type: spell
+aliases:
+- the Unhanding Canto
+summary: Wren's signature canto — it tears the focus from another weaver's hand and is what her lenset
+  throws in the last exchange.
+fields:
+  incantation: Sunderhold
+  type: canto
+  effect: strips the lenset from an opponent's grip
+  light: pale gold

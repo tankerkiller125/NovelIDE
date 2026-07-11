@@ -1,0 +1,18 @@
+id: agatha-prewitt
+name: Agatha Prewitt
+type: character
+aliases:
+- Aunt Agatha
+summary: Miriel's Unwoven sister, who took Wren in with resentment — her grudge born of a childhood letter
+  begging to be let into Thornfall too.
+fields:
+  lineage: unwoven
+status:
+- state: alive
+relations:
+- type: married-to
+  to: osric-prewitt
+- type: parent-of
+  to: gully-prewitt
+- type: sibling-of
+  to: miriel-alcott

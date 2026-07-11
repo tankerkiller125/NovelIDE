@@ -1,0 +1,14 @@
+id: grull
+name: Grull
+type: character
+aliases:
+- Grull
+summary: Bogdan's sixteen-foot fathomkin half-brother, dragged home from the sea-cliffs and slowly gentled
+  in the Shrouded Wood.
+fields:
+  lineage: fathomkin
+status:
+- state: alive
+relations:
+- type: sibling-of
+  to: bogdan-turl

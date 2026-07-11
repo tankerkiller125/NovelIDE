@@ -1,0 +1,8 @@
+id: draught-of-stillwater
+name: Draught of Stillwater
+type: potion
+summary: Wormroot and low-tide kelp make a sleeping draught so deep it mimics drowning — Brix's first-lesson
+  riddle, and Wren's chart-aided triumph in the sixth book.
+fields:
+  effect: deathlike sleep
+  difficulty: advanced

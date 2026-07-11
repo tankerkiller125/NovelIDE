@@ -1,0 +1,35 @@
+id: julian-ashenford
+name: Julian Ashenford
+type: character
+aliases:
+- Julian
+summary: Wren's schoolyard rival, pressed into the Drowned King's service at sixteen and set an impossible
+  task he cannot bring himself to finish.
+fields:
+  order: Undertow
+  lineage: woven
+  born: the year of the low tide
+status:
+- state: alive
+relations:
+- type: member-of
+  to: undertow-order
+- type: member-of
+  to: the-wardens-watch
+  from:
+    book: 05-the-drowned-court
+  until:
+    book: 06-the-reliquary
+- type: member-of
+  to: the-saltsworn
+  from:
+    book: 06-the-reliquary
+- type: enemy-of
+  to: wren-alcott
+- type: owns
+  to: the-sovereign-lens
+  from:
+    book: 06-the-reliquary
+  until:
+    book: 07-the-last-canto
+  note: Mastery only — he disarmed Hollis on the spire without ever holding the lens.

@@ -1,0 +1,39 @@
+id: eamon-hollis
+name: Eamon Hollis
+type: character
+aliases:
+- Headmaster Hollis
+- the Warden of Thornfall
+summary: Headmaster of Thornfall and the only weaver the Drowned King ever feared; keeper of the war's
+  deepest plans and its heaviest secret.
+fields:
+  order: Riptide
+  lineage: half-woven
+  beacon: pyre-heron
+  occupation: Headmaster of Thornfall Conservatory
+status:
+- state: alive
+- state: dead
+  at:
+    book: 06-the-reliquary
+  note: Slain atop the Beacon Spire — arranged; a reliquary's curse was already killing him.
+relations:
+- type: leads
+  to: order-of-the-grey-dawn
+  until:
+    book: 06-the-reliquary
+- type: leads
+  to: thornfall-conservatory
+  until:
+    book: 06-the-reliquary
+- type: mentor-of
+  to: wren-alcott
+- type: owns
+  to: the-sovereign-lens
+  until:
+    book: 06-the-reliquary
+  note: Won from Halbrecht Mourn long ago; mastery passes to Julian Ashenford, who disarms him.
+- type: sibling-of
+  to: gideon-hollis
+- type: enemy-of
+  to: corvane-mirehold

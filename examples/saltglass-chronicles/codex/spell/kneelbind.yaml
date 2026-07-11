@@ -1,0 +1,10 @@
+id: kneelbind
+name: Kneelbind
+type: spell
+aliases:
+- the Leglock Canto
+summary: Locks the legs mid-stride — Julian's idea of a joke.
+fields:
+  incantation: Kneelbind
+  type: canto
+  effect: binds the legs together

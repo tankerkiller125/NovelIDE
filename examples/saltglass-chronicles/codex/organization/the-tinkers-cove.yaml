@@ -1,0 +1,9 @@
+id: the-tinkers-cove
+name: the Tinker's Cove
+type: organization
+summary: Cade Marsh's curio-and-trick shop on the Coilrow, seeded by Wren's Trine winnings — the one bright
+  shopfront on a darkening street.
+fields:
+  leader: Cade Marsh
+  headquarters: the Coilrow, Port Meridian
+  founded: the sixth book

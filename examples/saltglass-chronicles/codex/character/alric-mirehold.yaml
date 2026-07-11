@@ -1,0 +1,19 @@
+id: alric-mirehold
+name: Alric Mirehold
+type: character
+aliases:
+- Alric
+- A.M.
+summary: The Drowned King's younger kin, a Saltsworn who found his conscience — stole the drowned signet
+  and died for it, leaving only the initials A.M.
+fields:
+  order: Undertow
+  lineage: woven
+status:
+- state: dead
+  note: Drowned by the vault-wraiths retrieving the signet reliquary, having left a forgery in its place
+    — revealed in the last book.
+relations:
+- type: member-of
+  to: the-saltsworn
+  note: Defected in secret; his theft of the signet surfaces only in the final book.

@@ -1,0 +1,11 @@
+id: gully-prewitt
+name: Gully Prewitt
+type: character
+aliases:
+- Gully
+summary: Wren's bullying cousin; a Griever attack in the fifth book begins the slow thaw that ends with
+  a mumbled thanks.
+fields:
+  lineage: unwoven
+status:
+- state: alive

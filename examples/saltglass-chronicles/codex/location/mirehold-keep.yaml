@@ -1,0 +1,12 @@
+id: mirehold-keep
+name: Mirehold Keep
+type: location
+summary: The Ashenfords' sea-cliff keep, seized as the Drowned King's court — its drawing-room hosts the
+  war's darkest councils and its cellar the prisoners.
+fields:
+  type: keep
+  region: the Sablefen Coast
+status:
+- state: the Drowned King's court
+  at:
+    book: 07-the-last-canto

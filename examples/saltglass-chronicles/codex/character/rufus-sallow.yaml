@@ -1,0 +1,23 @@
+id: rufus-sallow
+name: Rufus Sallow
+type: character
+aliases:
+- High Warden Sallow
+summary: Lion-grey war-time High Warden, a former Tidewarden; tortured and killed in the Concord's fall
+  — he never gave Wren up.
+fields:
+  lineage: woven
+  occupation: High Warden of the Concord
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Murdered by the Saltsworn when the Concord fell.
+relations:
+- type: leads
+  to: tidal-concord
+  from:
+    book: 06-the-reliquary
+  until:
+    book: 07-the-last-canto

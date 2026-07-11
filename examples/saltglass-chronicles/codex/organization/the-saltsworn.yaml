@@ -1,0 +1,18 @@
+id: the-saltsworn
+name: the Saltsworn
+type: organization
+summary: The Drowned King's inner circle, branded with the brine-mark — lineage-supremacists who rule
+  by terror in both wars.
+fields:
+  leader: Corvane Mirehold
+  purpose: pure-lineage supremacy; the Drowned King's will
+status:
+- state: scattered
+  note: Leaderless after Saltmere — imprisoned, hidden, or acquitted as 'mind-bound'.
+- state: re-formed
+  at:
+    book: 04-the-trine-tournament
+  note: Summoned to the shallows by the restored brine-mark.
+- state: defeated
+  at:
+    book: 07-the-last-canto

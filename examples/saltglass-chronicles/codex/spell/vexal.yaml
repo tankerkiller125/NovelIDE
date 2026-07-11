@@ -1,0 +1,11 @@
+id: vexal
+name: Vexal
+type: spell
+aliases:
+- the Racking Canto
+summary: Inflicts crippling agony; one of the three Forbidden Cantos. The Locke sisters used it to break
+  the Hale family.
+fields:
+  incantation: Vexal
+  type: forbidden canto
+  effect: unbearable pain

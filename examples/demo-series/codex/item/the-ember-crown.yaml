@@ -1,0 +1,10 @@
+id: the-ember-crown
+name: the Ember Crown
+type: item
+summary: Relic crown that channels caldera-fire. Destroyed with Aria at the Ash Gate.
+status:
+    - state: intact
+    - state: destroyed
+      at:
+        book: 01-the-ember-crown
+        chapter: 02-the-battle-of-cinders.md

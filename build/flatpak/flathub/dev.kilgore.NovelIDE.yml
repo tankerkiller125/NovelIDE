@@ -1,0 +1,55 @@
+# Flathub submission manifest for NovelIDE.
+#
+# Identical to the local manifest except the source: a vendored release
+# tarball produced by the GitHub release workflow (contains the full source
+# tree plus vendor/ and frontend/dist, so the sandbox build is fully
+# offline).
+#
+# To submit to Flathub:
+#   1. Tag a release (vX.Y.Z) — the release workflow attaches
+#      novelide-X.Y.Z-vendored.tar.xz and its sha256 to the GitHub release.
+#   2. Fill in the url: and sha256: below (the workflow prints both).
+#   3. Follow https://docs.flathub.org/docs/for-app-authors/submission —
+#      fork flathub/flathub, add this file as the app manifest, open a PR.
+app-id: dev.kilgore.NovelIDE
+runtime: org.gnome.Platform
+runtime-version: '50'
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.golang
+command: novelide
+
+build-options:
+  append-path: /usr/lib/sdk/golang/bin
+  env:
+    GOFLAGS: -mod=vendor
+    GOCACHE: /run/build/novelide/.gocache
+
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  - --device=dri
+  - --filesystem=home
+  - --share=network
+
+modules:
+  - name: novelide
+    buildsystem: simple
+    build-commands:
+      - go build -trimpath -buildvcs=false -tags desktop,production,webkit2_41 -ldflags "-s -w" -o novelide .
+      - install -Dm755 novelide /app/bin/novelide
+      - install -Dm644 build/flatpak/dev.kilgore.NovelIDE.desktop /app/share/applications/dev.kilgore.NovelIDE.desktop
+      - install -Dm644 build/flatpak/dev.kilgore.NovelIDE.metainfo.xml /app/share/metainfo/dev.kilgore.NovelIDE.metainfo.xml
+      - install -Dm644 build/flatpak/icon-512.png /app/share/icons/hicolor/512x512/apps/dev.kilgore.NovelIDE.png
+      - install -Dm644 build/flatpak/dicts/en_US.aff /app/share/hunspell/en_US.aff
+      - install -Dm644 build/flatpak/dicts/en_US.dic /app/share/hunspell/en_US.dic
+      - install -Dm644 build/flatpak/dicts/en_GB.aff /app/share/hunspell/en_GB.aff
+      - install -Dm644 build/flatpak/dicts/en_GB.dic /app/share/hunspell/en_GB.dic
+    sources:
+      - type: archive
+        # TODO: point at the release tarball and paste the sha256 the
+        # release workflow prints, e.g.
+        # url: https://github.com/OWNER/novelide/releases/download/v0.1.0/novelide-0.1.0-vendored.tar.xz
+        url: https://github.com/OWNER/novelide/releases/download/vX.Y.Z/novelide-X.Y.Z-vendored.tar.xz
+        sha256: FILL_ME_IN

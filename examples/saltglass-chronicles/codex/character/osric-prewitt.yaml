@@ -1,0 +1,19 @@
+id: osric-prewitt
+name: Osric Prewitt
+type: character
+aliases:
+- Uncle Osric
+summary: Ledger-selling Unwoven uncle who spent ten years pretending weaving away and the next six failing
+  at it.
+fields:
+  lineage: unwoven
+  occupation: ledger-broker
+status:
+- state: alive
+relations:
+- type: married-to
+  to: agatha-prewitt
+- type: parent-of
+  to: gully-prewitt
+- type: owns
+  to: nine-prewitt-lane

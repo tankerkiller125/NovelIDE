@@ -1,0 +1,15 @@
+id: the-leviathan
+name: the Leviathan
+type: creature
+aliases:
+- the Serpent of the Warren
+summary: Sabine Vex's thousand-tide sea-serpent, whose gaze kills and whose reflection petrifies — loosed
+  on the school twice through its flooded pipes.
+fields:
+  classification: leviathan
+status:
+- state: alive
+- state: dead
+  at:
+    book: 02-the-sunken-warren
+  note: Killed by Wren with the Sword of Storrow; its fangs unmake reliquaries for the rest of the saga.

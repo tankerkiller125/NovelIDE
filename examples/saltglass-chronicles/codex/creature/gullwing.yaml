@@ -1,0 +1,13 @@
+id: gullwing
+name: Gullwing
+type: creature
+summary: The tidesteed who slashed Julian Ashenford for bad manners — condemned to die, saved by a turnglass,
+  and Dorian's getaway mount.
+fields:
+  classification: tidesteed
+status:
+- state: alive
+  note: Condemned in the third book, rescued the same night.
+relations:
+- type: pet-of
+  to: bogdan-turl

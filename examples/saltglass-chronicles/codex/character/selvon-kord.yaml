@@ -1,0 +1,27 @@
+id: selvon-kord
+name: Selvon Kord
+type: character
+aliases:
+- Kord
+summary: Kaldmarch's headmaster and a Saltsworn who named names to stay out of Bleakhold; flees the Drowned
+  King's return and is hunted down.
+fields:
+  lineage: woven
+  occupation: Headmaster of Kaldmarch
+status:
+- state: alive
+- state: dead
+  at:
+    book: 06-the-reliquary
+  note: Found dead in a smuggler's shack with the brine-mark burned above it — deserters last barely a
+    year.
+relations:
+- type: member-of
+  to: the-saltsworn
+  until:
+    book: 01-the-marked-tide
+  note: Defected by informing; fled rather than answer the mark's return.
+- type: leads
+  to: kaldmarch-institute
+  until:
+    book: 04-the-trine-tournament

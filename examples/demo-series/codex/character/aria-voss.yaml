@@ -1,0 +1,34 @@
+id: aria-voss
+name: Aria Voss
+type: character
+aliases:
+    - Aria
+    - the Ember Witch
+summary: Fire mage of Emberfall; bearer of the Ember Crown. Dies at the Battle of Cinders.
+details: |
+    Aria grew up in the ash-farms below Emberfall and discovered her flame-craft
+    at thirteen. Quick to laugh, slow to forgive.
+fields:
+    age: "27"
+    hair: copper-red
+    weapon: twin sickles
+status:
+    - state: alive
+    - state: dead
+      at:
+        book: 01-the-ember-crown
+        chapter: 02-the-battle-of-cinders.md
+      note: Sacrifices herself to seal the Ash Gate.
+relations:
+    - type: owns
+      to: the-ember-crown
+      until:
+        book: 01-the-ember-crown
+        chapter: 02-the-battle-of-cinders.md
+    - type: leads
+      to: the-cinder-guard
+      until:
+        book: 01-the-ember-crown
+        chapter: 02-the-battle-of-cinders.md
+    - type: located-in
+      to: emberfall

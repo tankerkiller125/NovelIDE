@@ -1,0 +1,7 @@
+id: sablefen-shallows
+name: the Sablefen Shallows
+type: location
+summary: The desolate tide-flat of the Mireholds — its bone-strewn shallows host the Drowned King's rebirth.
+fields:
+  type: tidal flat
+  region: the Sablefen Coast

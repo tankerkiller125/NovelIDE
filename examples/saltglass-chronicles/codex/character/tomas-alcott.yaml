@@ -1,0 +1,22 @@
+id: tomas-alcott
+name: Tomas Alcott
+type: character
+aliases:
+- the Stag of the Nightstray
+summary: Wren's father, a Nightstray and stag-skinshift; murdered by the Drowned King at Saltmere before
+  the saga opens.
+fields:
+  order: Riptide
+  lineage: woven
+status:
+- state: dead
+  note: Killed defending his family, sixteen years before the first book.
+relations:
+- type: parent-of
+  to: wren-alcott
+- type: married-to
+  to: miriel-alcott
+- type: member-of
+  to: the-nightstray
+- type: created
+  to: the-wanderers-chart

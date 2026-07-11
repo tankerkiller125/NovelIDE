@@ -1,0 +1,21 @@
+id: miriel-alcott
+name: Miriel Alcott
+type: character
+aliases:
+- Miriel Prewitt
+summary: Wren's mother, whose sacrificial death wove a blood-ward around her daughter; the lifelong love
+  of Cassian Dorn.
+fields:
+  order: Riptide
+  lineage: unwoven-born
+  beacon: vixen
+status:
+- state: dead
+  note: Killed at Saltmere shielding Wren, sixteen years before the first book.
+relations:
+- type: parent-of
+  to: wren-alcott
+- type: married-to
+  to: tomas-alcott
+- type: sibling-of
+  to: agatha-prewitt

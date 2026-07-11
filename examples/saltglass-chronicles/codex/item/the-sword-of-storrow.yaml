@@ -1,0 +1,13 @@
+id: the-sword-of-storrow
+name: the Sword of Storrow
+type: item
+aliases:
+- Storrow's sword
+summary: Grindle-forged sea-glass sword that presents itself to any true Riptide in need — and, having
+  drunk Leviathan venom, unmakes reliquaries.
+fields:
+  maker: grindle-forged (Gornhollow's first smith)
+  powers: imbibes what makes it stronger
+status:
+- state: intact
+  note: Drawn from the Tideglass Cowl by Tobin in the final siege to behead Nharla.

@@ -1,0 +1,11 @@
+id: reliquary
+name: reliquary
+type: concept
+aliases:
+- reliquaries
+- soul-anchor
+summary: An object drowned with a torn shard of a weaver's self, anchoring its maker to life — made by
+  murder, the foulest weaving there is. The Drowned King made five on purpose, a sixth of his serpent,
+  and a seventh by accident.
+fields:
+  category: dark weaving

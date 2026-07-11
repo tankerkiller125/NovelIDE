@@ -1,0 +1,23 @@
+id: wick-marsh
+name: Wick Marsh
+type: character
+aliases:
+- Wick
+summary: The gentlest Marsh child, a greenwork prodigy; falls in the siege of Thornfall shielding a younger
+  student.
+fields:
+  order: Millpond
+  lineage: woven
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Killed when a warding-wall collapsed during the siege.
+relations:
+- type: member-of
+  to: millpond-order
+- type: member-of
+  to: wrens-watch
+  from:
+    book: 05-the-drowned-court

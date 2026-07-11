@@ -1,0 +1,7 @@
+id: the-blackwash
+name: the Blackwash
+type: location
+summary: The Coilrow's crooked shadow, given to the dark arts — where a mispronounced tide-way lands twelve-year-olds.
+fields:
+  type: street
+  region: Port Meridian

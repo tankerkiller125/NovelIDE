@@ -1,0 +1,18 @@
+id: gideon-hollis
+name: Gideon Hollis
+type: character
+aliases:
+- Gideon
+summary: Eamon's estranged brother and keeper of the Grey Gull; his hidden tunnel turns the tide before
+  the final siege.
+fields:
+  lineage: half-woven
+  beacon: ram
+  occupation: innkeeper, the Grey Gull
+status:
+- state: alive
+relations:
+- type: member-of
+  to: order-of-the-grey-dawn
+- type: owns
+  to: the-grey-gull

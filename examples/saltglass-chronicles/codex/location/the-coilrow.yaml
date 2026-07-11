@@ -1,0 +1,10 @@
+id: the-coilrow
+name: the Coilrow
+type: location
+aliases:
+- Saltmarket
+summary: The Isles' hidden weaving market, entered through the Kelp and Kettle's back wall — lensets,
+  robes, cauldrons, and a grindle bank.
+fields:
+  type: market street
+  region: Port Meridian

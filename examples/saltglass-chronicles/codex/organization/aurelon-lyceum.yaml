@@ -1,0 +1,9 @@
+id: aurelon-lyceum
+name: the Aurelon Lyceum
+type: organization
+aliases:
+- Aurelon
+summary: The gilded southern academy whose delegation arrives by sea-drawn barge, led by the part-fathomkin
+  Directrice Maroux.
+fields:
+  leader: Directrice Maroux

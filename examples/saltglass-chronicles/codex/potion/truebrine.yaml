@@ -1,0 +1,8 @@
+id: truebrine
+name: Truebrine
+type: potion
+summary: Three drops of this clear brine and the deepest secret spills out; Dorn's standing threat, Hollis's
+  tool on Lucan Crole.
+fields:
+  effect: compels the drinker to speak the truth
+  appearance: clear as seawater, odourless

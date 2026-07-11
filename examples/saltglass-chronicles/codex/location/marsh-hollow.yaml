@@ -1,0 +1,8 @@
+id: marsh-hollow
+name: Marsh Hollow
+type: location
+summary: The Marshes' impossibly stacked house above a tidal creek, held up by weaving and love; Wren's
+  favourite place in the world.
+fields:
+  type: family home
+  region: the Saltmarsh Coast

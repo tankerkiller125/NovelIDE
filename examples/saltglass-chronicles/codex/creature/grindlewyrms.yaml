@@ -1,0 +1,9 @@
+id: grindlewyrms
+name: grindlewyrms
+type: creature
+aliases:
+- grindlewyrm
+summary: Cliff-sized talking kraken-spiders with a taste for fresh meat; Old Fathom's brood rules a hollow
+  of the Shrouded Wood.
+fields:
+  classification: beast, five-tide

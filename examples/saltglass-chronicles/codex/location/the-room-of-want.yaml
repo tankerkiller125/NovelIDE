@@ -1,0 +1,16 @@
+id: the-room-of-want
+name: the Room of Want
+type: location
+aliases:
+- the Come-and-Go Room
+summary: The room that becomes whatever you truly need — the Watch's training-hall, the smugglers' cabinet-room,
+  the resistance's dormitory, and the heap where a circlet hid for an age.
+fields:
+  type: shifting room
+  region: the ninth stair, Thornfall
+status:
+- state: intact
+- state: burned
+  at:
+    book: 07-the-last-canto
+  note: The hidden-things room is taken by wyrmfire.

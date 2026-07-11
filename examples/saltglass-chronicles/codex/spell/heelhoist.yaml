@@ -1,0 +1,11 @@
+id: heelhoist
+name: Heelhoist
+type: spell
+aliases:
+- the Ankle Canto
+summary: Dangles the target in the air by the heel — another of Dorn's schoolboy inventions, later turned
+  against him.
+fields:
+  incantation: Heelhoist
+  type: jinx
+  effect: hauls the victim up by one ankle

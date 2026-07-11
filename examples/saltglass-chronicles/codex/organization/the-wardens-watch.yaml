@@ -1,0 +1,14 @@
+id: the-wardens-watch
+name: the Wardens' Watch
+type: organization
+summary: Inquisitor Crow's hand-picked student enforcers, licensed to strip points from prefects — Undertow
+  with armbands.
+fields:
+  leader: Delphine Crow
+status:
+- state: active
+  at:
+    book: 05-the-drowned-court
+- state: disbanded
+  at:
+    book: 06-the-reliquary

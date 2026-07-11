@@ -1,0 +1,16 @@
+id: wailing-nell
+name: Wailing Nell
+type: character
+aliases:
+- Nell
+summary: Shade of a bullied Springtide girl killed by the Leviathan in the founders' echo — the Warren's
+  first victim, haunting the flooded washroom ever since.
+fields:
+  lineage: shade
+status:
+- state: shade
+  note: Killed by the Leviathan when the Warren first opened; the Drowned King's first murder and the
+    price of the tideglass journal.
+relations:
+- type: member-of
+  to: springtide-order

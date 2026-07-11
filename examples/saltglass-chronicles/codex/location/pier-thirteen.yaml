@@ -1,0 +1,10 @@
+id: pier-thirteen
+name: Pier Thirteen
+type: location
+aliases:
+- the Tideward Pier
+summary: Through the salt-mist between piers twelve and fourteen at Port Meridian — where every school
+  year begins with a scarlet tide-ferry.
+fields:
+  type: harbour pier
+  region: Port Meridian harbour

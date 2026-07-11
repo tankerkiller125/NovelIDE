@@ -1,0 +1,14 @@
+id: snurr
+name: Snurr
+type: character
+aliases:
+- Snurr
+summary: Gornhollow grindle who helps the trio rob the Ashenford vault — for the price of the Sword of
+  Storrow, and betrays them mid-heist.
+fields:
+  lineage: grindle
+status:
+- state: alive
+relations:
+- type: serves
+  to: gornhollow-bank

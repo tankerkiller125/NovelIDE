@@ -1,0 +1,14 @@
+id: mundo-flint
+name: Mundo Flint
+type: character
+aliases:
+- Mundo
+summary: Petty crook on the Grey Dawn's books; loots Vell House and unknowingly hands a reliquary to Inquisitor
+  Crow.
+fields:
+  lineage: woven
+status:
+- state: alive
+relations:
+- type: member-of
+  to: order-of-the-grey-dawn

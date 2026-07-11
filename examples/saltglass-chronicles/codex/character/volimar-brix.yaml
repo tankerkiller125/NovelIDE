@@ -1,0 +1,23 @@
+id: volimar-brix
+name: Volimar Brix
+type: character
+aliases:
+- Master Brix
+summary: Collector of promising students and returning brewing-master; his doctored memory hides the secret
+  of the Drowned King's reliquaries.
+fields:
+  order: Undertow
+  lineage: woven
+  occupation: Brewing-master (from book 6)
+status:
+- state: alive
+relations:
+- type: teaches
+  to: thornfall-conservatory
+  from:
+    book: 06-the-reliquary
+- type: leads
+  to: the-salon-of-brix
+- type: mentor-of
+  to: corvane-mirehold
+  note: Unwittingly told the young Aldous Mirehold how reliquaries are made.

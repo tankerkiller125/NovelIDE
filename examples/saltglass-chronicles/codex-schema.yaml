@@ -1,0 +1,116 @@
+types:
+- id: character
+  label: Character
+  icon: 👤
+  fields:
+  - order
+  - lineage
+  - focus
+  - beacon
+  - occupation
+  - born
+- id: location
+  label: Location
+  icon: 🗺
+  fields:
+  - region
+  - type
+- id: spell
+  label: Canto
+  icon: 🎵
+  fields:
+  - incantation
+  - type
+  - effect
+  - light
+- id: potion
+  label: Draught
+  icon: ⚗️
+  fields:
+  - effect
+  - appearance
+  - difficulty
+- id: item
+  label: Object & Relic
+  icon: 🪞
+  fields:
+  - type
+  - powers
+  - maker
+- id: creature
+  label: Creature & Being
+  icon: 🐉
+  fields:
+  - classification
+  - ministry-rating
+- id: organization
+  label: Order & Faction
+  icon: 🏛
+  fields:
+  - leader
+  - headquarters
+  - purpose
+  - founded
+- id: arc
+  label: Arc / Thread
+  icon: 🧵
+  fields:
+  - premise
+  - payoff
+- id: concept
+  label: Concept
+  icon: ✦
+  fields:
+  - category
+relations:
+- id: parent-of
+  label: parent of
+  inverseLabel: child of
+- id: sibling-of
+  label: sibling of
+  symmetric: true
+- id: married-to
+  label: married to
+  symmetric: true
+- id: loves
+  label: loves
+  inverseLabel: loved by
+- id: godparent-of
+  label: godparent of
+  inverseLabel: godchild of
+- id: mentor-of
+  label: mentor of
+  inverseLabel: student of
+- id: teaches
+  label: teaches at
+  inverseLabel: employs
+- id: allied-with
+  label: allied with
+  symmetric: true
+- id: enemy-of
+  label: enemy of
+  symmetric: true
+- id: member-of
+  label: member of
+  inverseLabel: has member
+- id: leads
+  label: leads
+  inverseLabel: led by
+- id: serves
+  label: serves
+  inverseLabel: served by
+- id: owns
+  label: owns
+  inverseLabel: owned by
+- id: created
+  label: created
+  inverseLabel: created by
+- id: killed
+  label: killed
+  inverseLabel: killed by
+- id: located-in
+  label: located in
+  inverseLabel: contains
+- id: pet-of
+  label: pet / companion of
+  inverseLabel: keeps

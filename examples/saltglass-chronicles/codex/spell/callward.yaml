@@ -1,0 +1,10 @@
+id: callward
+name: Callward
+type: spell
+aliases:
+- the Summoning Canto
+summary: Summons objects across a distance; Wren drills it for weeks to pull her skiff to her mid-trial.
+fields:
+  incantation: Callward
+  type: canto
+  effect: draws an object to the singer

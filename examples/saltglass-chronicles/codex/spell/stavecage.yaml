@@ -1,0 +1,11 @@
+id: stavecage
+name: Stavecage
+type: spell
+aliases:
+- the Bodylock Canto
+summary: Snaps the target's body straight and still; Odile's reluctant answer to anyone standing in the
+  way.
+fields:
+  incantation: Stavecage
+  type: canto
+  effect: locks the whole body rigid

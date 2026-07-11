@@ -1,0 +1,14 @@
+id: the-drowned-signet
+name: the Drowned Signet
+type: item
+summary: Reliquary made from the Mirehold family seal — its stone secretly the Recalling Pearl. Its curse
+  costs Hollis his hand, and within the year his life.
+fields:
+  type: reliquary
+status:
+- state: intact
+- state: destroyed
+  at:
+    book: 06-the-reliquary
+  note: Broken by Hollis with the Sword of Storrow the tide before the sixth book; the curse in it is
+    already killing him.

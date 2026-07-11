@@ -1,0 +1,24 @@
+id: nessa-brightwater
+name: Nessa Brightwater
+type: character
+aliases:
+- Nessa
+summary: Faceshifter Tidewarden who hates her given name; marries Rowan Thistle and falls beside him in
+  the siege.
+fields:
+  lineage: faceshifter
+  beacon: wolf (changed)
+  occupation: Tidewarden
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Killed in the siege; the narrative shows her body beside Rowan's without naming her killer.
+relations:
+- type: member-of
+  to: order-of-the-grey-dawn
+- type: married-to
+  to: rowan-thistle
+  from:
+    book: 07-the-last-canto

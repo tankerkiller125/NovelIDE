@@ -1,0 +1,23 @@
+id: saul-brand
+name: Saul Brand
+type: character
+aliases:
+- Warden Brand
+summary: Calm, commanding Tidewarden of the Grey Dawn; his lynx-beacon warns the wedding, and he ends
+  the saga as High Warden.
+fields:
+  lineage: woven
+  beacon: lynx
+  occupation: Tidewarden
+status:
+- state: alive
+relations:
+- type: member-of
+  to: order-of-the-grey-dawn
+- type: serves
+  to: tidal-concord
+- type: leads
+  to: tidal-concord
+  from:
+    book: 07-the-last-canto
+  note: Named interim High Warden after the siege of Thornfall.

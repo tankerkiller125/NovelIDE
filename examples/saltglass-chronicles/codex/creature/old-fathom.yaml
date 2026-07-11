@@ -1,0 +1,16 @@
+id: old-fathom
+name: Old Fathom
+type: creature
+summary: Bogdan's grindlewyrm, raised from a hatchling and wrongly blamed for the Warren's killings —
+  innocent of that, though glad to feed the trio to his brood.
+fields:
+  classification: grindlewyrm
+status:
+- state: alive
+- state: dead
+  at:
+    book: 06-the-reliquary
+  note: Dies of great age; Brix attends the burial for the venom.
+relations:
+- type: pet-of
+  to: bogdan-turl

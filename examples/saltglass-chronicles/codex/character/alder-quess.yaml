@@ -1,0 +1,17 @@
+id: alder-quess
+name: Alder Quess
+type: character
+aliases:
+- Alder
+summary: Luthien's father and editor of the Contrary Tide; explains the Saltglass Relics — then sells
+  the trio out to save his daughter.
+fields:
+  lineage: woven
+  occupation: editor, the Contrary Tide
+status:
+- state: alive
+relations:
+- type: parent-of
+  to: luthien-quess
+- type: leads
+  to: the-contrary-tide

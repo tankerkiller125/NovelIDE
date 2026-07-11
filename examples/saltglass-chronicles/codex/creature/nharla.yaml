@@ -1,0 +1,21 @@
+id: nharla
+name: Nharla
+type: creature
+summary: The Drowned King's serpent, familiar, and final reliquary — milked for his rebirth, fed his enemies,
+  and beheaded by Tobin Hale.
+fields:
+  classification: great sea-serpent
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Beheaded by Tobin with the Sword of Storrow — the last reliquary, unmade before Mirehold's eyes.
+relations:
+- type: serves
+  to: corvane-mirehold
+- type: killed
+  to: cassian-dorn
+  from:
+    book: 07-the-last-canto
+  note: On Mirehold's order, in the Wailing Boathouse.

@@ -1,0 +1,16 @@
+synopsis: |
+    The Ember Cycle: a fire mage seals a gate with her life in book one —
+    and book two asks what, exactly, came back wearing her face.
+books:
+    - id: 01-the-ember-crown
+      synopsis: Aria's rise and sacrifice. The Gate is sealed; the Crown is spent.
+      status: revised
+      arcs:
+        - the-ash-gate-arc
+      targetWords: 90000
+    - id: 02-the-ash-court
+      synopsis: Kael grieves — until Aria walks into his kitchen. The seal is not what anyone thought.
+      status: drafted
+      arcs:
+        - the-ash-gate-arc
+      targetWords: 95000

@@ -1,0 +1,49 @@
+synopsis: 'The Saltglass Chronicles: an orphan marked by a dark weaver''s broken canto rises through Thornfall
+  Conservatory to unmake the Drowned King, one drowned shard of his soul at a time.'
+books:
+- id: 01-the-marked-tide
+  synopsis: Wren learns she is a weaver and uncovers a reliquary hidden in Thornfall's tide-engine.
+  status: final
+  arcs:
+  - the-return-of-the-drowned-king
+  targetWords: 80000
+- id: 02-the-sunken-warren
+  synopsis: The Leviathan wakes beneath the school; the first reliquary is unmade.
+  status: final
+  arcs:
+  - the-reliquary-hunt
+  targetWords: 85000
+- id: 03-the-sablefen-pact
+  synopsis: Wren's wrongly-blamed godfather resurfaces and dies saving her.
+  status: revised
+  arcs:
+  - the-return-of-the-drowned-king
+  targetWords: 95000
+- id: 04-the-trine-tournament
+  synopsis: The three schools compete; the Drowned King engineers his full return; the first champion
+    falls.
+  status: revised
+  arcs:
+  - the-return-of-the-drowned-king
+  targetWords: 110000
+- id: 05-the-drowned-court
+  synopsis: The Concord denies the war; a purge takes the deputy head; Wren's Watch is born.
+  status: drafted
+  arcs:
+  - the-marsh-estrangement
+  targetWords: 130000
+- id: 06-the-reliquary
+  synopsis: The soul-anchor secret is laid bare and Headmaster Hollis dies by arrangement.
+  status: drafted
+  arcs:
+  - the-reliquary-hunt
+  - the-tidemasters-secret
+  targetWords: 120000
+- id: 07-the-last-canto
+  synopsis: The siege of Thornfall; the last reliquary falls and the Drowned King with it.
+  status: outlined
+  arcs:
+  - the-reliquary-hunt
+  - the-three-relics
+  - the-tidemasters-secret
+  targetWords: 150000

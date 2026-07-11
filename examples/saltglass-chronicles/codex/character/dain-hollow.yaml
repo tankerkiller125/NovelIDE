@@ -1,0 +1,20 @@
+id: dain-hollow
+name: Dain Hollow
+type: character
+aliases:
+- Grey Dain
+- the Old Warden
+summary: Legendary scarred Tidewarden with a seeing-glass eye; impersonated for a whole year, then struck
+  down covering Wren's escape.
+fields:
+  lineage: woven
+  occupation: Tidewarden (retired)
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Cut down by Mirehold himself during the flight of the seven decoys.
+relations:
+- type: member-of
+  to: order-of-the-grey-dawn

@@ -1,0 +1,22 @@
+id: rosalind-marsh
+name: Rosalind Marsh
+type: character
+aliases:
+- Mrs Marsh
+summary: Matriarch of the Marshes and Wren's surrogate mother; strikes down Vespera Locke in the siege
+  of Thornfall.
+fields:
+  order: Riptide (formerly)
+  lineage: woven
+status:
+- state: alive
+relations:
+- type: married-to
+  to: edwin-marsh
+- type: member-of
+  to: order-of-the-grey-dawn
+- type: killed
+  to: vespera-locke
+  from:
+    book: 07-the-last-canto
+  note: A duel in the tide-hall, defending her daughter.

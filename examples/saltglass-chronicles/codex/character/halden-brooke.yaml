@@ -1,0 +1,22 @@
+id: halden-brooke
+name: Halden Brooke
+type: character
+aliases:
+- Halden
+summary: Millpond's champion — skiff-captain, prefect, and Trine co-winner; the first casualty of the
+  Drowned King's return.
+fields:
+  order: Millpond
+  lineage: woven
+  born: the year of the grey tide
+status:
+- state: alive
+- state: dead
+  at:
+    book: 04-the-trine-tournament
+  note: Killed by Lucan Crole's canto in the Sablefen shallows.
+relations:
+- type: member-of
+  to: millpond-order
+- type: loves
+  to: su-lin-marr

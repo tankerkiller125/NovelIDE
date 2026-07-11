@@ -1,0 +1,11 @@
+id: goldwake
+name: Goldwake
+type: potion
+aliases:
+- Fortune's Tincture
+summary: Molten-gold fortune in a vial, banned from contest. Wren's single dose pries the true reliquary
+  memory out of Volimar Brix.
+fields:
+  effect: extraordinary luck for a span of hours
+  appearance: molten gold
+  difficulty: perilous to brew

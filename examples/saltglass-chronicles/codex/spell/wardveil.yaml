@@ -1,0 +1,10 @@
+id: wardveil
+name: Wardveil
+type: spell
+aliases:
+- the Shield Canto
+summary: Throws up an unseen shield that turns hexes back; a staple of Wren's Watch.
+fields:
+  incantation: Wardveil
+  type: canto
+  effect: raises a rebounding shield

@@ -1,0 +1,22 @@
+id: cade-marsh
+name: Cade Marsh
+type: character
+aliases:
+- Cade
+summary: Eldest Marsh son, curio-dealer and champion skiff-racer; scarred by Fenris Graff and wed to Amelie
+  Brvolar.
+fields:
+  lineage: woven
+  occupation: curio-dealer, the Tinker's Cove
+status:
+- state: alive
+relations:
+- type: married-to
+  to: amelie-brvolar
+  from:
+    book: 07-the-last-canto
+  note: Wedding at Marsh Hollow on the eve of the Concord's fall.
+- type: member-of
+  to: order-of-the-grey-dawn
+- type: owns
+  to: the-tinkers-cove

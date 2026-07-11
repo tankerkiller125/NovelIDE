@@ -1,0 +1,10 @@
+id: cinderhorn
+name: Cinderhorn
+type: creature
+summary: Bogdan's illegal reef-drake, hatched by a hearth in a wooden hut — bites Perrin, gets smuggled
+  to the northern sanctuaries, and turns out to be a she.
+fields:
+  classification: reef-drake
+relations:
+- type: pet-of
+  to: bogdan-turl

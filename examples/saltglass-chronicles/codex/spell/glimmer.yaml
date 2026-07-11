@@ -1,0 +1,10 @@
+id: glimmer
+name: Glimmer
+type: spell
+aliases:
+- the Lightwick Canto
+summary: Lights the focus like a lantern. Undone by the Duskwick counter.
+fields:
+  incantation: Glimmer
+  type: canto
+  effect: kindles light at the lenset's tip

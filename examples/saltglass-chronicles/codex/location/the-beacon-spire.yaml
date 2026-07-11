@@ -1,0 +1,10 @@
+id: the-beacon-spire
+name: the Beacon Spire
+type: location
+aliases:
+- the tide-struck spire
+summary: Thornfall's tallest tower — midnight star-reading, a smuggled drake's departure, and the ramparts
+  where Hollis falls.
+fields:
+  type: tower
+  region: Thornfall

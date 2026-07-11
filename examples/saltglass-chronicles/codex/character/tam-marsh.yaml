@@ -1,0 +1,26 @@
+id: tam-marsh
+name: Tam Marsh
+type: character
+aliases:
+- Tam
+summary: Ambitious Concord careerist whose rise estranges him from the Marshes for three books before
+  he returns for the last stand.
+fields:
+  lineage: woven
+  occupation: under-secretary to the High Warden
+  born: the year of the red tide
+status:
+- state: alive
+- state: estranged
+  at:
+    book: 05-the-drowned-court
+  note: Rows with Edwin over his promotion and severs ties with the family.
+- state: reconciled
+  at:
+    book: 07-the-last-canto
+  note: Returns through the Grey Gull tunnel minutes before the siege and asks forgiveness.
+relations:
+- type: serves
+  to: tidal-concord
+  from:
+    book: 05-the-drowned-court

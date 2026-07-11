@@ -1,0 +1,58 @@
+id: corvane-mirehold
+name: Corvane Mirehold
+type: character
+aliases:
+- the Drowned King
+- Aldous Mirehold
+- the Nameless Tide
+summary: The greatest dark weaver of the age, who drowned fragments of his self in reliquaries to cheat
+  death — and died of his own rebounding canto when the Sovereign Lens refused him.
+fields:
+  order: Undertow
+  lineage: half-woven
+  born: the year of the black tide
+status:
+- state: unbodied
+  note: His death-canto rebounded off the infant Wren at Saltmere, unmaking his body.
+- state: restored
+  at:
+    book: 04-the-trine-tournament
+  note: Reborn in the Sablefen shallows from bone, brine, and stolen blood.
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: His own killing-canto rebounds in the tide-hall — the Sovereign Lens knew Wren for its master.
+relations:
+- type: leads
+  to: the-saltsworn
+- type: enemy-of
+  to: wren-alcott
+- type: enemy-of
+  to: eamon-hollis
+- type: created
+  to: the-tideglass-journal
+- type: created
+  to: the-drowned-signet
+- type: created
+  to: the-first-weaver-conch
+- type: created
+  to: the-brine-crown
+- type: created
+  to: the-star-lens
+- type: killed
+  to: tomas-alcott
+- type: killed
+  to: miriel-alcott
+- type: killed
+  to: dain-hollow
+  from:
+    book: 07-the-last-canto
+  note: Struck him down personally during the flight of the seven decoys.
+- type: killed
+  to: halbrecht-mourn
+  from:
+    book: 07-the-last-canto
+  note: Murdered in his cell at Fastness Mourn for refusing to yield the Sovereign Lens.
+- type: pet-of
+  to: nharla
+  note: Nharla is his familiar and final reliquary; the relation reads from the serpent's side.

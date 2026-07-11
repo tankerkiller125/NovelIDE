@@ -1,0 +1,11 @@
+id: blankmere
+name: Blankmere
+type: spell
+aliases:
+- the Forgetting Canto
+summary: Wipes memory clean. Gaultier Plume's whole career, until a broken lenset handed it back to him;
+  Odile uses it on her own parents to keep them safe.
+fields:
+  incantation: Blankmere
+  type: canto
+  effect: erases memory

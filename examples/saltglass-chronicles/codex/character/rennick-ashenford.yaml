@@ -1,0 +1,28 @@
+id: rennick-ashenford
+name: Rennick Ashenford
+type: character
+aliases:
+- Lord Ashenford
+summary: Silken aristocrat of the Saltsworn who slips the tideglass journal into a child's satchel, and
+  ends the war broken, begging for his son.
+fields:
+  lineage: woven
+status:
+- state: alive
+- state: imprisoned
+  at:
+    book: 05-the-drowned-court
+  note: Sent to Bleakhold after the ruin at the Vault of Tides.
+- state: released
+  at:
+    book: 07-the-last-canto
+  note: Out of Bleakhold but disgraced, his keep seized as Mirehold's court.
+relations:
+- type: member-of
+  to: the-saltsworn
+- type: married-to
+  to: sable-ashenford
+- type: parent-of
+  to: julian-ashenford
+- type: owns
+  to: mirehold-keep

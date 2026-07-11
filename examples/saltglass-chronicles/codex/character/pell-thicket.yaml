@@ -1,0 +1,22 @@
+id: pell-thicket
+name: Pell Thicket
+type: character
+aliases:
+- Thicket
+summary: Mind-bound puppet High Warden installed after the coup; the Drowned King's respectable mask on
+  the Concord.
+fields:
+  lineage: woven
+  occupation: High Warden (puppet)
+status:
+- state: alive
+- state: mind-bound
+  at:
+    book: 07-the-last-canto
+relations:
+- type: leads
+  to: tidal-concord
+  from:
+    book: 07-the-last-canto
+- type: serves
+  to: corvane-mirehold

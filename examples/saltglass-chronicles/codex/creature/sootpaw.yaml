@@ -1,0 +1,9 @@
+id: sootpaw
+name: Sootpaw
+type: creature
+summary: Odile's flat-faced, half-wild cat — the only one who knew the marsh-rat was lying all along.
+fields:
+  classification: cat (part-marsh-lynx)
+relations:
+- type: pet-of
+  to: odile-sarkany

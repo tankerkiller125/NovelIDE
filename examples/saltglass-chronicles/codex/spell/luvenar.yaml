@@ -1,0 +1,12 @@
+id: luvenar
+name: Luvenar
+type: spell
+aliases:
+- the Beacon Canto
+summary: 'Advanced weaving: a guardian summoned from a single joyful memory, the only ward against Grievers.
+  Wren learns it at thirteen from Rowan Thistle.'
+fields:
+  incantation: Luvenar
+  type: canto
+  effect: conjures a guardian beacon-shape from a bright memory
+  light: silver

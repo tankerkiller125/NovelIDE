@@ -1,0 +1,22 @@
+id: kael-dryn
+name: Kael Dryn
+type: character
+aliases:
+    - Kael
+summary: Aria's sworn shield, survivor of the Battle of Cinders.
+fields:
+    age: "31"
+    weapon: tower shield
+status:
+    - state: alive
+relations:
+    - type: serves
+      to: aria-voss
+      until:
+        book: 01-the-ember-crown
+        chapter: 02-the-battle-of-cinders.md
+      note: Sworn shield until her death.
+    - type: member-of
+      to: the-cinder-guard
+    - type: loves
+      to: aria-voss

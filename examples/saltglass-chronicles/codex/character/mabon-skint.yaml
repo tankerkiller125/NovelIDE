@@ -1,0 +1,15 @@
+id: mabon-skint
+name: Mabon Skint
+type: character
+aliases:
+- Skint
+summary: Dimglass caretaker of Thornfall, forever prowling the tide-halls with Grimalkin and dreaming
+  of hanging students by their thumbs.
+fields:
+  lineage: dimglass
+  occupation: caretaker
+status:
+- state: alive
+relations:
+- type: serves
+  to: thornfall-conservatory

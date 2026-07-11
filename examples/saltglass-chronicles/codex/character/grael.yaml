@@ -1,0 +1,20 @@
+id: grael
+name: Grael
+type: character
+aliases:
+- Grael
+summary: The Vells' bitter old house-hob; his treatment by Dorian helps doom his master, but Alric's stolen
+  signet wins him to Wren's side.
+fields:
+  lineage: hob
+status:
+- state: alive
+relations:
+- type: serves
+  to: dorian-vell
+  until:
+    book: 03-the-sablefen-pact
+- type: serves
+  to: wren-alcott
+  from:
+    book: 04-the-trine-tournament

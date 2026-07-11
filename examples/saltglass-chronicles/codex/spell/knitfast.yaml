@@ -1,0 +1,10 @@
+id: knitfast
+name: Knitfast
+type: spell
+aliases:
+- the Mending Canto
+summary: Mends what is broken — lensets, most often, on the tide-ferry.
+fields:
+  incantation: Knitfast
+  type: canto
+  effect: repairs broken objects

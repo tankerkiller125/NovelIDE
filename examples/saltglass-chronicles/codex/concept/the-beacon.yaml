@@ -1,0 +1,9 @@
+id: the-beacon
+name: the Beacon
+type: concept
+aliases:
+- beacon-shape
+summary: The guardian conjured by the beacon-canto, shaped by the singer's soul — it can change with grief
+  or love, and the Grey Dawn uses beacons to carry word.
+fields:
+  category: canto-work

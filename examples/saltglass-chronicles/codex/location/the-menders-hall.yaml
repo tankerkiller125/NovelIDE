@@ -1,0 +1,8 @@
+id: the-menders-hall
+name: the Menders' Hall
+type: location
+summary: The Isles' weaver-infirmary, behind a shuttered shopfront — serpent-bites on the ground floor,
+  unmendable canto-damage on the fourth.
+fields:
+  type: hospital
+  region: Port Meridian

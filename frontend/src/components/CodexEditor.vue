@@ -1,0 +1,502 @@
+<script setup lang="ts">
+import { computed, reactive, ref, watch } from 'vue'
+import { DeleteCodexEntry, SaveCodexEntry } from '../api'
+import {
+  closeTab,
+  codexById,
+  openTab,
+  pinActiveTab,
+  pinTab,
+  relationDefById,
+  schemaTypes,
+  setWorkspace,
+  state,
+  tabKey,
+} from '../store'
+import type { CodexEntry, Relation, StatusChange } from '../types'
+
+const props = defineProps<{ entryId: string; draft?: CodexEntry }>()
+
+function blankEntry(): CodexEntry {
+  return {
+    id: '',
+    name: '',
+    type: schemaTypes.value[0]?.id ?? 'character',
+    aliases: [],
+    summary: '',
+    details: '',
+    fields: {},
+    status: [],
+    relations: [],
+    scope: 'series',
+  }
+}
+
+const original = computed<CodexEntry | null>(() =>
+  props.entryId ? (codexById.value.get(props.entryId) ?? null) : (props.draft ?? null),
+)
+
+interface FieldRow {
+  key: string
+  value: string
+}
+
+interface RelationRow {
+  type: string
+  to: string
+  fromBook: string
+  fromChapter: string
+  untilBook: string
+  untilChapter: string
+  note: string
+}
+
+const form = reactive({
+  name: '',
+  type: 'character',
+  aliasText: '',
+  summary: '',
+  details: '',
+  scope: 'series',
+  fields: [] as FieldRow[],
+  status: [] as StatusChange[],
+  relations: [] as RelationRow[],
+})
+
+const saving = ref(false)
+const message = ref('')
+const isNew = computed(() => !props.entryId)
+
+function loadForm() {
+  const e = original.value ?? blankEntry()
+  form.name = e.name
+  form.type = e.type
+  form.aliasText = (e.aliases ?? []).join(', ')
+  form.summary = e.summary ?? ''
+  form.details = e.details ?? ''
+  form.scope = e.scope || 'series'
+  form.fields = Object.entries(e.fields ?? {}).map(([key, value]) => ({ key, value }))
+  form.status = (e.status ?? []).map((s) => ({
+    state: s.state,
+    at: { book: s.at?.book ?? '', chapter: s.at?.chapter ?? '' },
+    note: s.note ?? '',
+  }))
+  form.relations = (e.relations ?? []).map((r) => ({
+    type: r.type,
+    to: r.to,
+    fromBook: r.from?.book ?? '',
+    fromChapter: r.from?.chapter ?? '',
+    untilBook: r.until?.book ?? '',
+    untilChapter: r.until?.chapter ?? '',
+    note: r.note ?? '',
+  }))
+}
+watch(() => [props.entryId, original.value], loadForm, { immediate: true })
+
+const books = computed(() => state.workspace?.books ?? [])
+const chaptersOf = (bookId: string) => books.value.find((b) => b.id === bookId)?.chapters ?? []
+
+const typeDef = computed(() => schemaTypes.value.find((t) => t.id === form.type))
+const suggestedFields = computed(() => {
+  const used = new Set(form.fields.map((f) => f.key))
+  return (typeDef.value?.fields ?? []).filter((f) => !used.has(f))
+})
+
+const relationDefs = computed(() => state.workspace?.schema?.relations ?? [])
+const otherEntries = computed(() =>
+  (state.workspace?.codex ?? []).filter((e) => e.id !== original.value?.id),
+)
+
+/** Incoming edges (defined on other entries), shown read-only. */
+const incoming = computed(() => {
+  const id = original.value?.id
+  if (!id) return []
+  const defs = relationDefById.value
+  const out = []
+  for (const e of state.workspace?.codex ?? []) {
+    if (e.id === id) continue
+    for (const r of e.relations ?? []) {
+      if (r.to !== id) continue
+      const def = defs.get(r.type)
+      out.push({
+        label: def?.symmetric ? (def?.label ?? r.type) : def?.inverseLabel || `← ${def?.label ?? r.type}`,
+        targetId: e.id,
+        targetName: e.name,
+        timespan: '',
+        note: r.note ?? '',
+      })
+    }
+  }
+  return out
+})
+
+function addField(key = '') {
+  form.fields.push({ key, value: '' })
+}
+function addStatus() {
+  form.status.push({
+    state: form.status.length ? 'dead' : 'alive',
+    at: { book: '', chapter: '' },
+    note: '',
+  })
+}
+function addRelation() {
+  form.relations.push({
+    type: relationDefs.value[0]?.id ?? '',
+    to: otherEntries.value[0]?.id ?? '',
+    fromBook: '',
+    fromChapter: '',
+    untilBook: '',
+    untilChapter: '',
+    note: '',
+  })
+}
+
+async function save() {
+  if (!form.name.trim()) {
+    message.value = 'Name is required.'
+    return
+  }
+  saving.value = true
+  message.value = ''
+  const old = original.value
+  const entry: CodexEntry = {
+    id: old?.id ?? '',
+    name: form.name.trim(),
+    type: form.type,
+    aliases: form.aliasText
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
+    summary: form.summary,
+    details: form.details,
+    fields: Object.fromEntries(
+      form.fields.filter((f) => f.key.trim()).map((f) => [f.key.trim(), f.value]),
+    ),
+    status: form.status
+      .filter((s) => s.state.trim())
+      .map((s) => ({
+        state: s.state.trim().toLowerCase(),
+        at: {
+          book: s.at.book || undefined,
+          chapter: s.at.book ? s.at.chapter || undefined : undefined,
+        },
+        note: s.note || undefined,
+      })),
+    relations: form.relations
+      .filter((r) => r.type && r.to)
+      .map((r): Relation => ({
+        type: r.type,
+        to: r.to,
+        from: r.fromBook
+          ? { book: r.fromBook, chapter: r.fromChapter || undefined }
+          : undefined,
+        until: r.untilBook
+          ? { book: r.untilBook, chapter: r.untilChapter || undefined }
+          : undefined,
+        note: r.note || undefined,
+      })),
+    scope: form.scope,
+  }
+  try {
+    const ws = await SaveCodexEntry(entry, old?.type ?? '', old?.scope ?? '')
+    setWorkspace(ws)
+    message.value = 'Saved.'
+    if (isNew.value) {
+      const saved = (ws.codex ?? []).find((e) => e.name === entry.name)
+      closeTab(tabKey({ kind: 'codex', entryId: '' }))
+      if (saved) {
+        const key = tabKey({ kind: 'codex', entryId: saved.id })
+        openTab({ kind: 'codex', entryId: saved.id })
+        pinTab(key) // a just-created entry stays open, not a preview
+      }
+    }
+  } catch (e) {
+    message.value = `Save failed: ${e}`
+  } finally {
+    saving.value = false
+  }
+}
+
+async function remove() {
+  const e = original.value
+  if (!e || !confirm(`Delete "${e.name}" from the codex?`)) return
+  try {
+    const ws = await DeleteCodexEntry(e)
+    closeTab(tabKey({ kind: 'codex', entryId: e.id }))
+    setWorkspace(ws)
+  } catch (err) {
+    message.value = `Delete failed: ${err}`
+  }
+}
+</script>
+
+<template>
+  <div class="codex-editor" @input="pinActiveTab" @change="pinActiveTab">
+    <div class="ce-toolbar">
+      <h2>{{ isNew ? 'New Codex Entry' : form.name || 'Codex Entry' }}</h2>
+      <span class="ce-msg">{{ message }}</span>
+      <button class="btn danger" v-if="!isNew" @click="remove">Delete</button>
+      <button class="btn primary" :disabled="saving" @click="save">Save</button>
+    </div>
+
+    <div class="ce-grid">
+      <label>Name <input v-model="form.name" placeholder="Aria Voss" /></label>
+      <label>
+        Type
+        <select v-model="form.type">
+          <option v-for="t in schemaTypes" :key="t.id" :value="t.id">
+            {{ t.icon }} {{ t.label || t.id }}
+          </option>
+        </select>
+      </label>
+      <label>
+        Scope
+        <select v-model="form.scope">
+          <option value="series">Series (shared across books)</option>
+          <option v-for="b in books" :key="b.id" :value="b.id">Book: {{ b.title }}</option>
+        </select>
+      </label>
+      <label class="wide">
+        Aliases <span class="hint">comma-separated; also matched in the manuscript</span>
+        <input v-model="form.aliasText" placeholder="Aria, the Ember Witch" />
+      </label>
+      <label class="wide">
+        Summary
+        <input v-model="form.summary" placeholder="One-line summary shown on hover cards" />
+      </label>
+      <label class="wide">
+        Details <textarea v-model="form.details" rows="6" placeholder="Longer notes (markdown)" />
+      </label>
+    </div>
+
+    <section>
+      <div class="ce-sect-head">
+        <h3>Facts</h3>
+        <button class="btn" @click="addField()">+ Add fact</button>
+      </div>
+      <div v-if="suggestedFields.length" class="ce-suggest">
+        Suggested:
+        <button
+          v-for="f in suggestedFields"
+          :key="f"
+          class="btn chip"
+          @click="addField(f)"
+        >
+          {{ f }}
+        </button>
+      </div>
+      <div v-for="(f, i) in form.fields" :key="i" class="ce-row">
+        <input v-model="f.key" placeholder="age" class="ce-key" />
+        <input v-model="f.value" placeholder="27" class="ce-val" />
+        <button class="btn icon" @click="form.fields.splice(i, 1)">✕</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="ce-sect-head">
+        <h3>Relationships</h3>
+        <button class="btn" @click="addRelation">+ Add relationship</button>
+      </div>
+      <p class="hint">
+        Directional and story-time aware — "serves X <em>until</em> book 1 chapter 12" is a
+        different fact than "serves X". Relationship types are defined in the workspace schema
+        (⚙ in the Codex sidebar).
+      </p>
+      <div v-for="(r, i) in form.relations" :key="i" class="ce-rel">
+        <div class="ce-row">
+          <select v-model="r.type" class="ce-key">
+            <option v-for="d in relationDefs" :key="d.id" :value="d.id">{{ d.label }}</option>
+          </select>
+          <select v-model="r.to" class="ce-target">
+            <option v-for="e in otherEntries" :key="e.id" :value="e.id">{{ e.name }}</option>
+          </select>
+          <input v-model="r.note" placeholder="note" class="ce-val" />
+          <button class="btn icon" @click="form.relations.splice(i, 1)">✕</button>
+        </div>
+        <div class="ce-row ce-rel-time">
+          <span class="hint">from</span>
+          <select v-model="r.fromBook" class="ce-book">
+            <option value="">the start</option>
+            <option v-for="b in books" :key="b.id" :value="b.id">{{ b.title }}</option>
+          </select>
+          <select v-if="r.fromBook" v-model="r.fromChapter" class="ce-book">
+            <option value="">start of book</option>
+            <option v-for="c in chaptersOf(r.fromBook)" :key="c" :value="c">{{ c }}</option>
+          </select>
+          <span class="hint">until</span>
+          <select v-model="r.untilBook" class="ce-book">
+            <option value="">— ongoing —</option>
+            <option v-for="b in books" :key="b.id" :value="b.id">{{ b.title }}</option>
+          </select>
+          <select v-if="r.untilBook" v-model="r.untilChapter" class="ce-book">
+            <option value="">start of book</option>
+            <option v-for="c in chaptersOf(r.untilBook)" :key="c" :value="c">{{ c }}</option>
+          </select>
+        </div>
+      </div>
+      <div v-if="incoming.length" class="ce-incoming">
+        <h4>Referenced by</h4>
+        <div v-for="(r, i) in incoming" :key="i" class="ce-in-row">
+          <span class="ce-in-label">{{ r.label }}</span>
+          <a class="ce-in-target" @click="openTab({ kind: 'codex', entryId: r.targetId })">
+            {{ r.targetName }}
+          </a>
+          <span v-if="r.timespan" class="hint">({{ r.timespan }})</span>
+          <span v-if="r.note" class="hint">— {{ r.note }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="ce-sect-head">
+        <h3>Status timeline</h3>
+        <button class="btn" @click="addStatus">+ Add status change</button>
+      </div>
+      <p class="hint">
+        The consistency checker uses this. Example: <em>alive</em> from the start, then
+        <em>dead</em> anchored to the chapter where it happens — any later scene where they act
+        gets flagged.
+      </p>
+      <div v-for="(s, i) in form.status" :key="i" class="ce-row">
+        <input v-model="s.state" placeholder="alive / dead / missing" class="ce-key" />
+        <select v-model="s.at.book" class="ce-book">
+          <option value="">from the start</option>
+          <option v-for="b in books" :key="b.id" :value="b.id">{{ b.title }}</option>
+        </select>
+        <select v-if="s.at.book" v-model="s.at.chapter" class="ce-book">
+          <option value="">start of book</option>
+          <option v-for="c in chaptersOf(s.at.book!)" :key="c" :value="c">{{ c }}</option>
+        </select>
+        <input v-model="s.note" placeholder="note" class="ce-val" />
+        <button class="btn icon" @click="form.status.splice(i, 1)">✕</button>
+      </div>
+    </section>
+  </div>
+</template>
+
+<style scoped>
+.codex-editor {
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px 28px 60px;
+}
+.ce-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.ce-toolbar h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 18px;
+}
+.ce-msg {
+  color: var(--nv-muted);
+  font-size: 12px;
+}
+.ce-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px 16px;
+  margin-bottom: 20px;
+}
+.ce-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--nv-muted);
+}
+.ce-grid .wide {
+  grid-column: 1 / -1;
+}
+section {
+  margin-bottom: 22px;
+}
+.ce-sect-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.ce-sect-head h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.ce-suggest {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--nv-faint);
+  margin-bottom: 8px;
+}
+.btn.chip {
+  padding: 1px 9px;
+  font-size: 11px;
+  border-radius: 10px;
+}
+.ce-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.ce-key {
+  width: 180px;
+}
+.ce-target {
+  width: 220px;
+}
+.ce-book {
+  width: 190px;
+}
+.ce-val {
+  flex: 1;
+}
+.ce-rel {
+  border: 1px solid var(--nv-border);
+  border-radius: 8px;
+  padding: 8px 10px 4px;
+  margin-bottom: 8px;
+}
+.ce-rel-time {
+  margin-bottom: 2px;
+}
+.ce-incoming {
+  margin-top: 12px;
+}
+.ce-incoming h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--nv-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ce-in-row {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  font-size: 13px;
+  padding: 2px 0;
+}
+.ce-in-label {
+  color: var(--nv-muted);
+}
+.ce-in-target {
+  color: var(--nv-accent);
+  cursor: pointer;
+}
+.hint {
+  color: var(--nv-faint);
+  font-size: 11px;
+  font-weight: normal;
+}
+p.hint {
+  margin: 0 0 10px;
+  font-size: 12px;
+}
+</style>

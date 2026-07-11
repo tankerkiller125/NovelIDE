@@ -1,0 +1,13 @@
+id: the-star-lens
+name: the Star-Lens
+type: item
+summary: A reliquary ground from black star-glass and hidden in the Room of Want, in the school the Drowned
+  King swore he never touched.
+fields:
+  type: reliquary
+status:
+- state: intact
+- state: destroyed
+  at:
+    book: 07-the-last-canto
+  note: Consumed by Hurst Gorrel's wyrmfire in the Room of Want.

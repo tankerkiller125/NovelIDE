@@ -1,0 +1,10 @@
+id: the-first-flitwing
+name: the First Flitwing
+type: item
+aliases:
+- the Flitwing
+summary: 'The flitwing Wren nearly swallowed in her first match — bequeathed by Hollis with a memory sealed
+  in its shell. Within it: the Recalling Pearl.'
+status:
+- state: intact
+  note: Opens for Wren in the Shrouded Wood in the seventh book.

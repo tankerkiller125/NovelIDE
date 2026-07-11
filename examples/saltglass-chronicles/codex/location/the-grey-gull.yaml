@@ -1,0 +1,8 @@
+id: the-grey-gull
+name: the Grey Gull
+type: location
+summary: Hollowmere's dingy other inn, sawdust and goat-smell, kept by Gideon — where the Watch is founded,
+  the prophecy was overheard, and the last tunnel into Thornfall opens.
+fields:
+  type: inn
+  region: Hollowmere

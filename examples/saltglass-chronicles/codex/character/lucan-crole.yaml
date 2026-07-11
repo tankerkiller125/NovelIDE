@@ -1,0 +1,25 @@
+id: lucan-crole
+name: Lucan Crole
+type: character
+aliases:
+- Lucan
+summary: Fanatic Saltsworn who spent the fourth book wearing Dain Hollow's face and steering Wren into
+  the shallows.
+fields:
+  lineage: woven
+status:
+- state: alive
+- state: soul-hollowed
+  at:
+    book: 04-the-trine-tournament
+  note: Given the Hollowing on the High Warden's arrival — worse than dead, and with him died the proof
+    of the Drowned King's return.
+relations:
+- type: member-of
+  to: the-saltsworn
+- type: serves
+  to: corvane-mirehold
+- type: killed
+  to: barnaby-crole-sr
+  from:
+    book: 04-the-trine-tournament

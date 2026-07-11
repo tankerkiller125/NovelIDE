@@ -1,0 +1,11 @@
+id: wellspring
+name: Wellspring
+type: spell
+aliases:
+- the Water Canto
+summary: Draws clean water from the air; Wren sings it desperately in the sea-cave and against a burning
+  hut.
+fields:
+  incantation: Wellspring
+  type: canto
+  effect: conjures fresh water

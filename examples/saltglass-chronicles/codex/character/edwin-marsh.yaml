@@ -1,0 +1,30 @@
+id: edwin-marsh
+name: Edwin Marsh
+type: character
+aliases:
+- Mr Marsh
+summary: A Concord tide-clerk fascinated by Unwoven contraptions; warm-hearted patriarch of the Marsh
+  family and a Grey Dawn agent.
+fields:
+  order: Riptide (formerly)
+  lineage: woven
+  occupation: clerk, Bureau of Unwoven Affairs
+status:
+- state: alive
+relations:
+- type: married-to
+  to: rosalind-marsh
+- type: parent-of
+  to: cade-marsh
+- type: parent-of
+  to: perrin-marsh
+- type: parent-of
+  to: tam-marsh
+- type: parent-of
+  to: wick-marsh
+- type: parent-of
+  to: elsie-marsh
+- type: member-of
+  to: order-of-the-grey-dawn
+- type: serves
+  to: tidal-concord

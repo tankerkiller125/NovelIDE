@@ -1,0 +1,9 @@
+id: pyre-herons
+name: pyre-herons
+type: creature
+aliases:
+- pyre-heron
+summary: Grey shore-birds that die in flame and hatch again from their own ash; their tears mend, and
+  their cry lends courage to the true of heart.
+fields:
+  classification: beast

@@ -1,0 +1,17 @@
+id: sethra-cole
+name: Sethra Cole
+type: character
+aliases:
+- Mistress Cole
+summary: Star-reading mistress, a fraud at the lectern who nonetheless spoke the true prophecy that set
+  the whole saga turning.
+fields:
+  lineage: woven
+  occupation: Star-reading mistress
+status:
+- state: alive
+relations:
+- type: teaches
+  to: thornfall-conservatory
+- type: created
+  to: the-prophecy

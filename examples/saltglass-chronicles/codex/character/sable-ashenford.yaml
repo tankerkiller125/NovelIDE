@@ -1,0 +1,18 @@
+id: sable-ashenford
+name: Sable Ashenford
+type: character
+aliases:
+- Lady Ashenford
+summary: Never a branded Saltsworn, but the mother whose lie to the Drowned King's face wins the war for
+  love of her son.
+fields:
+  lineage: woven
+status:
+- state: alive
+relations:
+- type: married-to
+  to: rennick-ashenford
+- type: parent-of
+  to: julian-ashenford
+- type: sibling-of
+  to: vespera-locke

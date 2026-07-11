@@ -1,0 +1,34 @@
+id: dorian-vell
+name: Dorian Vell
+type: character
+aliases:
+- the Hound of the Nightstray
+- V.
+summary: Wren's godfather and unregistered hound-skinshift; ten years in Bleakhold for a betrayal he never
+  committed, the last of the drowned House of Vell.
+fields:
+  order: Riptide
+  lineage: woven
+status:
+- state: alive
+- state: dead
+  at:
+    book: 03-the-sablefen-pact
+  note: Struck through the tide-veil in the Vault of Tides by Vespera Locke.
+relations:
+- type: godparent-of
+  to: wren-alcott
+- type: member-of
+  to: the-nightstray
+- type: member-of
+  to: order-of-the-grey-dawn
+- type: created
+  to: the-wanderers-chart
+- type: owns
+  to: vell-house
+  until:
+    book: 03-the-sablefen-pact
+  note: The house passes to Wren on his death.
+- type: sibling-of
+  to: alric-mirehold
+  note: Half-kin through the drowned houses.

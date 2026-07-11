@@ -1,0 +1,11 @@
+id: wyrmfire
+name: Wyrmfire
+type: spell
+aliases:
+- the Wild-Fire Canto
+summary: Cursed fire of serpent-shaped flame, nearly impossible to master — one of the few forces that
+  unmakes reliquaries. It takes the Room of Want, the star-lens, and Hurst Gorrel with it.
+fields:
+  incantation: Wyrmfire
+  type: forbidden canto
+  effect: unquenchable, beast-shaped fire

@@ -1,0 +1,21 @@
+id: bogdan-turl
+name: Bogdan Turl
+type: character
+aliases:
+- Bogdan
+summary: Half-fathomkin groundskeeper and Keeper of the Tide-Locks; expelled unjustly as a boy, devoted
+  to Wren and to every monster he can smuggle into his hut.
+fields:
+  lineage: half-fathomkin
+  occupation: groundskeeper, later beastlore master
+status:
+- state: alive
+relations:
+- type: teaches
+  to: thornfall-conservatory
+  from:
+    book: 03-the-sablefen-pact
+- type: member-of
+  to: order-of-the-grey-dawn
+- type: sibling-of
+  to: grull

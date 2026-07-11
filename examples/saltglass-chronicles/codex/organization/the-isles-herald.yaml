@@ -1,0 +1,8 @@
+id: the-isles-herald
+name: the Isles Herald
+type: organization
+aliases:
+- the Herald
+summary: The Isles' newspaper of record — which mostly records whatever the Concord prefers.
+fields:
+  purpose: news (and, periodically, propaganda)

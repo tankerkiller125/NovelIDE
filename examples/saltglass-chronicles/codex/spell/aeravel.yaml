@@ -1,0 +1,10 @@
+id: aeravel
+name: Aeravel
+type: spell
+aliases:
+- the Lifting Canto
+summary: Lifts and floats objects; Perrin's first real triumph, dropping a beam on a marsh-troll.
+fields:
+  incantation: Aeravel
+  type: canto
+  effect: raises objects into the air

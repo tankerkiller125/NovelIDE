@@ -1,0 +1,17 @@
+id: order-of-the-grey-dawn
+name: the Order of the Grey Dawn
+type: organization
+aliases:
+- the Grey Dawn
+summary: Hollis's secret society against the Drowned King, raised in the first war and re-formed the night
+  of his return; headquartered at Vell House.
+fields:
+  leader: Eamon Hollis
+  headquarters: Vell House
+  purpose: resistance against the Drowned King
+status:
+- state: disbanded
+  note: Stood down after the first war.
+- state: re-formed
+  at:
+    book: 04-the-trine-tournament

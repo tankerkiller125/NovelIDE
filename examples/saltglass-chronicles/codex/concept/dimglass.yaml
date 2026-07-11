@@ -1,0 +1,9 @@
+id: dimglass
+name: Dimglass
+type: concept
+aliases:
+- Dimglasses
+summary: Born to weavers but without the gift — the Isles' awkward secret, mostly living quietly among
+  the Unwoven.
+fields:
+  category: lineage

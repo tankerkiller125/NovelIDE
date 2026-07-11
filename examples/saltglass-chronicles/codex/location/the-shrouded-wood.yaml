@@ -1,0 +1,10 @@
+id: the-shrouded-wood
+name: the Shrouded Wood
+type: location
+aliases:
+- the Wood
+summary: The dark wood on Thornfall's grounds — Starkin, grindlewyrms, sea-unicorns, and every detention
+  that goes wrong. Wren walks into it to die.
+fields:
+  type: forest
+  region: Thornfall grounds

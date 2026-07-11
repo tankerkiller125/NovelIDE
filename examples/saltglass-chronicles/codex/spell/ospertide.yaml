@@ -1,0 +1,10 @@
+id: ospertide
+name: Ospertide
+type: spell
+aliases:
+- the Unlatching Canto
+summary: The thief's tide — opens what is locked, including the door that hides a warren.
+fields:
+  incantation: Ospertide
+  type: canto
+  effect: unlocks doors and tide-gates

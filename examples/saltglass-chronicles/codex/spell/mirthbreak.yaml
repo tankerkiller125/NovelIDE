@@ -1,0 +1,11 @@
+id: mirthbreak
+name: Mirthbreak
+type: spell
+aliases:
+- the Unmaking Canto
+summary: Turns a dreadmimic into something absurd — laughter finishes it. Tobin's version is the textbook
+  case.
+fields:
+  incantation: Mirthbreak
+  type: canto
+  effect: forces a dreadmimic into a shape you find funny

@@ -1,0 +1,10 @@
+id: grievers
+name: Grievers
+type: creature
+aliases:
+- Griever
+summary: Hooded wraiths of the cold tide that feed on gladness and can drink a soul entirely — Bleakhold's
+  keepers, until they defect to whichever side offers more despair.
+fields:
+  classification: non-being; joy-feeding wraith
+  ministry-rating: uncontrollable

@@ -1,0 +1,7 @@
+id: the-denn-cup
+name: Denn's Cup
+type: item
+summary: Halvard Denn's golden tide-cup, a Millpond heirloom coveted by collectors and lost for an age
+  in the vaults of Gornhollow.
+status:
+- state: intact

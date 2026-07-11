@@ -1,0 +1,67 @@
+# Flatpak manifest for NovelIDE — builds the app FROM SOURCE inside the
+# sandbox (Flathub-compatible build process; Flathub forbids prebuilt
+# binaries).
+#
+# The build is fully offline. Two things must exist in the source tree
+# before flatpak-builder runs (./build-flatpak.sh prepares both):
+#   - vendor/          `go mod vendor` (Go modules, no network in sandbox)
+#   - frontend/dist    `npm run build` (embedded by go:embed)
+#
+# The Wails CLI is not needed: `wails build` is `go build` with the
+# desktop,production tags once frontend/dist exists.
+#
+# This local variant uses a `dir` source; build/flatpak/flathub/ holds the
+# Flathub submission variant, identical except it builds from a release
+# tarball (URL + sha256).
+app-id: dev.kilgore.NovelIDE
+runtime: org.gnome.Platform
+runtime-version: '50'
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.golang
+command: novelide
+
+build-options:
+  append-path: /usr/lib/sdk/golang/bin
+  env:
+    GOFLAGS: -mod=vendor
+    GOCACHE: /run/build/novelide/.gocache
+
+finish-args:
+  # Display + GPU
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  - --device=dri
+  # Workspaces are plain folders anywhere in $HOME
+  - --filesystem=home
+  # Only used by the optional deep-NLP tier to download models from
+  # Hugging Face; everything else is fully offline
+  - --share=network
+
+modules:
+  - name: novelide
+    buildsystem: simple
+    build-commands:
+      - go build -trimpath -buildvcs=false -tags desktop,production,webkit2_41 -ldflags "-s -w" -o novelide .
+      - install -Dm755 novelide /app/bin/novelide
+      - install -Dm644 build/flatpak/dev.kilgore.NovelIDE.desktop /app/share/applications/dev.kilgore.NovelIDE.desktop
+      - install -Dm644 build/flatpak/dev.kilgore.NovelIDE.metainfo.xml /app/share/metainfo/dev.kilgore.NovelIDE.metainfo.xml
+      - install -Dm644 build/flatpak/icon-512.png /app/share/icons/hicolor/512x512/apps/dev.kilgore.NovelIDE.png
+      # Bundled dictionaries — the sandbox cannot see the host's
+      # /usr/share/hunspell; the spell engine searches /app/share/hunspell.
+      - install -Dm644 build/flatpak/dicts/en_US.aff /app/share/hunspell/en_US.aff
+      - install -Dm644 build/flatpak/dicts/en_US.dic /app/share/hunspell/en_US.dic
+      - install -Dm644 build/flatpak/dicts/en_GB.aff /app/share/hunspell/en_GB.aff
+      - install -Dm644 build/flatpak/dicts/en_GB.dic /app/share/hunspell/en_GB.dic
+    sources:
+      - type: dir
+        path: ../..
+        skip:
+          - build/bin
+          - build/flatpak/.flatpak-build
+          - build/flatpak/.flatpak-repo
+          - build/flatpak/.flatpak-builder
+          - build/flatpak/novelide.flatpak
+          - frontend/node_modules
+          - .git

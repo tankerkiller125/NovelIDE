@@ -1,0 +1,9 @@
+id: tide-mares
+name: Tide-Mares
+type: creature
+aliases:
+- tide-mare
+summary: Skeletal sea-horses of the sky, visible only to those who have watched someone die — unfairly
+  ill-omened, unerring, and the Watch's ride to the Concord.
+fields:
+  classification: beast

@@ -1,0 +1,18 @@
+id: aldric-storrow
+name: Aldric Storrow
+type: character
+aliases:
+- Storrow the Bold
+summary: Founder who prized courage; his cowl sorts the school and his sword answers those who ask bravely.
+fields:
+  lineage: woven
+status:
+- state: dead
+  note: Died a thousand tides before the saga.
+relations:
+- type: created
+  to: riptide-order
+- type: created
+  to: the-sword-of-storrow
+- type: created
+  to: the-tideglass-cowl

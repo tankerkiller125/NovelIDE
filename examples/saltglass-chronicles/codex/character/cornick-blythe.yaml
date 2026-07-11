@@ -1,0 +1,21 @@
+id: cornick-blythe
+name: Cornick Blythe
+type: character
+aliases:
+- High Warden Blythe
+summary: High Warden of the Concord whose year of denying the Drowned King's return costs the Isles their
+  head start.
+fields:
+  lineage: woven
+  occupation: High Warden of the Concord
+status:
+- state: alive
+- state: deposed
+  at:
+    book: 06-the-reliquary
+  note: Forced out in disgrace once Mirehold's return became undeniable.
+relations:
+- type: leads
+  to: tidal-concord
+  until:
+    book: 06-the-reliquary

@@ -1,0 +1,7 @@
+id: emberfall
+name: Emberfall
+type: location
+summary: Volcanic city-state built into the caldera wall; seat of the Ember Crown.
+fields:
+  population: ~40,000
+  ruler: the Ember Throne

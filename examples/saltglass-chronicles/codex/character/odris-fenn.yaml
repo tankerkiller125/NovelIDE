@@ -1,0 +1,18 @@
+id: odris-fenn
+name: Odris Fenn
+type: character
+aliases:
+- Master Fenn
+summary: Diminutive canto-master and head of Springtide, with grindle ancestry and a duelling champion's
+  past.
+fields:
+  order: Springtide
+  lineage: part-grindle
+  occupation: Canto-master
+status:
+- state: alive
+relations:
+- type: teaches
+  to: thornfall-conservatory
+- type: leads
+  to: springtide-order

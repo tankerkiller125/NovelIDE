@@ -1,0 +1,9 @@
+id: the-mindwell
+name: the Mindwell
+type: item
+summary: A basin of still tidewater for storing and reliving memories; the saga's window into the past
+  — the orphanage, the trials, and a tide-master's dying gift.
+fields:
+  powers: stores and replays memories
+status:
+- state: intact

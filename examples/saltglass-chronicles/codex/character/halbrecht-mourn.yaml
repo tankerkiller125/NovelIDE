@@ -1,0 +1,22 @@
+id: halbrecht-mourn
+name: Halbrecht Mourn
+type: character
+aliases:
+- Mourn
+summary: The dark weaver before the Drowned King — Hollis's brilliant, terrible first friend, defeated
+  by him and caged in Fastness Mourn.
+fields:
+  lineage: woven
+status:
+- state: imprisoned
+  note: In Fastness Mourn since his defeat by Hollis, decades before the saga.
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Killed in his cell by Mirehold for refusing to betray the Sovereign Lens.
+relations:
+- type: owns
+  to: the-sovereign-lens
+  until:
+    book: 01-the-marked-tide
+  note: Held it until his defeat, long before the saga; lost it to Hollis.

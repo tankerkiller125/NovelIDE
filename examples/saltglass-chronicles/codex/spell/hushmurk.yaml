@@ -1,0 +1,10 @@
+id: hushmurk
+name: Hushmurk
+type: spell
+aliases:
+- the Muffling Canto
+summary: Drowns eavesdroppers' ears in tide-noise so a conversation stays private; another Dorn invention.
+fields:
+  incantation: Hushmurk
+  type: canto
+  effect: fills nearby ears with a dull roar

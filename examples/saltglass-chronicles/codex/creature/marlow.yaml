@@ -1,0 +1,16 @@
+id: marlow
+name: Marlow
+type: creature
+summary: Wren's storm-petrel and first name-day gift — her one constant at Prewitt Lane, killed in the
+  flight that opens the seventh book.
+fields:
+  classification: storm-petrel
+status:
+- state: alive
+- state: dead
+  at:
+    book: 07-the-last-canto
+  note: Killed by a stray canto during the flight of the seven decoys.
+relations:
+- type: pet-of
+  to: wren-alcott

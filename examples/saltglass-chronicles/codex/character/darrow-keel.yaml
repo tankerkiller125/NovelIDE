@@ -1,0 +1,14 @@
+id: darrow-keel
+name: Darrow Keel
+type: character
+aliases:
+- Darrow
+summary: Obsessive Riptide skiff-captain who recruits first-year Wren as a catcher.
+fields:
+  order: Riptide
+  lineage: woven
+status:
+- state: alive
+relations:
+- type: member-of
+  to: riptide-order

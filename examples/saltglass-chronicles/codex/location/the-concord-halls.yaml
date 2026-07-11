@@ -1,0 +1,8 @@
+id: the-concord-halls
+name: the Concord Halls
+type: location
+summary: The weaver-government's tide-drowned warren beneath Port Meridian — the Atrium, the courtrooms,
+  and the Vault of Tides at the bottom.
+fields:
+  type: government complex
+  region: Port Meridian, below the waterline

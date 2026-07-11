@@ -1,0 +1,15 @@
+id: verity-sloane
+name: Verity Sloane
+type: character
+aliases:
+- Verity
+summary: Poison-quilled Isles Herald reporter and unregistered gull-skinshift; Odile keeps her in a jar
+  for a while.
+fields:
+  lineage: woven
+  occupation: reporter
+status:
+- state: alive
+relations:
+- type: serves
+  to: the-isles-herald

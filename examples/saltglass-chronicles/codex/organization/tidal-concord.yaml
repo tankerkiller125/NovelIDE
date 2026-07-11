@@ -1,0 +1,20 @@
+id: tidal-concord
+name: the Tidal Concord
+type: organization
+aliases:
+- the Concord
+summary: The weaver-government of the Isles — bureaucratic in peace, obstructive in denial, and a puppet
+  court after the coup.
+fields:
+  leader: the High Warden
+  headquarters: beneath Port Meridian
+status:
+- state: functioning
+- state: in denial
+  at:
+    book: 05-the-drowned-court
+  note: Spends a year denying the Drowned King's return and smearing Wren and Hollis.
+- state: fallen
+  at:
+    book: 07-the-last-canto
+  note: Sallow murdered; Thicket installed under a binding-canto.

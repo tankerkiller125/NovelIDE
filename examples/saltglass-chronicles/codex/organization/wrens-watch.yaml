@@ -1,0 +1,19 @@
+id: wrens-watch
+name: Wren's Watch
+type: organization
+aliases:
+- the Watch
+summary: The students' illegal warding club, founded in the Grey Gull under Inquisitor Crow's nose — coins
+  that burn, a room that hides, and the core of Thornfall's resistance.
+fields:
+  leader: Wren Alcott
+  headquarters: the Room of Want
+  founded: the fifth book
+status:
+- state: founded
+  at:
+    book: 05-the-drowned-court
+- state: revived
+  at:
+    book: 07-the-last-canto
+  note: Re-formed under Tobin, Elsie, and Luthien inside occupied Thornfall.

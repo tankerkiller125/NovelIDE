@@ -1,0 +1,15 @@
+id: sir-edric-holloway
+name: Sir Edric Holloway
+type: character
+aliases:
+- the Half-Drowned
+summary: Riptide's resident shade, drowned incompletely in the founders' age — his head still hangs by
+  a thread of kelp.
+fields:
+  lineage: shade
+status:
+- state: shade
+  note: Drowned in the founders' age; his half-severed head anchors the saga's chronology.
+relations:
+- type: member-of
+  to: riptide-order

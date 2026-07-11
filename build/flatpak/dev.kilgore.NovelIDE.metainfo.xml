@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.kilgore.NovelIDE</id>
+  <name>NovelIDE</name>
+  <summary>An IDE for novels, with a Codex that keeps your story straight</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <developer id="dev.kilgore">
+    <name>Matthew Kilgore</name>
+  </developer>
+  <description>
+    <p>
+      NovelIDE treats a novel like a software project: manuscripts are plain
+      Markdown, world knowledge lives in a schema-driven Codex, and a local
+      NLP engine cross-checks the two — flagging a dead character who acts
+      again, suggesting facts your prose states but the Codex doesn't record,
+      and spotting new characters you forgot to catalogue.
+    </p>
+    <p>
+      Plan at series, book, and chapter level with live word counts, plot-thread
+      matrices, and plan-vs-manuscript checks. Built for single novels and
+      multi-book series with shared worldbuilding. Fully offline: no accounts,
+      no API calls.
+    </p>
+  </description>
+  <launchable type="desktop-id">dev.kilgore.NovelIDE.desktop</launchable>
+  <!-- TODO before Flathub submission: point at the real repository, and
+       add <screenshot> entries (Flathub strongly recommends them). -->
+  <url type="homepage">https://github.com/OWNER/novelide</url>
+  <url type="bugtracker">https://github.com/OWNER/novelide/issues</url>
+  <categories>
+    <category>Office</category>
+    <category>WordProcessor</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-07-11">
+      <description>
+        <p>First packaged release: Codex, editor with hover cards and
+        consistency detection, planning views, spellcheck, and the optional
+        local transformer tier.</p>
+      </description>
+    </release>
+  </releases>
+</component>
