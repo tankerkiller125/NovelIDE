@@ -4,7 +4,7 @@
   <name>NovelIDE</name>
   <summary>An IDE for novels, with a Codex that keeps your story straight</summary>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>LicenseRef-proprietary</project_license>
+  <project_license>AGPL-3.0-or-later</project_license>
   <developer id="dev.kilgore">
     <name>Matthew Kilgore</name>
   </developer>
