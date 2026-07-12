@@ -3,7 +3,22 @@ package main
 import (
 	"strings"
 	"testing"
+
+	"novelide/internal/settings"
 )
+
+// TestSyncCloneRejectsUnsafeRemoteID ensures a server-supplied workspace id
+// can't steer the destination folder outside the one the user picked. These
+// cases are rejected before any network call.
+func TestSyncCloneRejectsUnsafeRemoteID(t *testing.T) {
+	a := &App{settings: settings.Settings{SyncServer: "http://sync.local", SyncToken: "tok", SyncAccountID: "acct"}}
+	parent := t.TempDir()
+	for _, id := range []string{"..", ".", "../evil", "/etc", `a\b`, "a/b"} {
+		if _, err := a.SyncCloneWorkspace(id, parent); err == nil {
+			t.Errorf("SyncCloneWorkspace accepted unsafe remote id %q", id)
+		}
+	}
+}
 
 func TestMentionSnippet(t *testing.T) {
 	// A mention deep inside a long chapter is clipped on both sides.

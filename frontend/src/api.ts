@@ -159,6 +159,9 @@ export const SyncNow = (): Promise<SyncOutcome> => app().SyncNow()
 export const SyncLinkPull = (remoteId: string): Promise<SyncOutcome> =>
   app().SyncLinkPull(remoteId)
 
+export const SyncCloneWorkspace = (remoteId: string, parentDir: string): Promise<Workspace> =>
+  app().SyncCloneWorkspace(remoteId, parentDir)
+
 export const Backlinks = (entryId: string): Promise<Backlink[]> => app().Backlinks(entryId)
 
 export const CreateSnapshot = (label: string): Promise<Snapshot[]> => app().CreateSnapshot(label)

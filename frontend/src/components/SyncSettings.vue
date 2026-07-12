@@ -1,104 +1,34 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import {
-  GetSettings,
-  RemoteWorkspaces,
-  SyncAuthConfig,
-  SyncLogin,
-  SyncLoginSSO,
-  SyncLogout,
-  SyncRegister,
-} from '../api'
+import { computed, onMounted, ref, watch } from 'vue'
+import { GetSettings, RemoteWorkspaces, SyncLogout } from '../api'
 import { confirmDialog, refreshSyncStatus, state, syncLinkPull, syncNow } from '../store'
-import type { AuthConfig, RemoteWorkspace, SyncResult } from '../types'
+import type { RemoteWorkspace, SyncResult } from '../types'
+import SyncSignIn from './SyncSignIn.vue'
 
-const server = ref('')
-const username = ref('')
-const password = ref('')
 const busy = ref(false)
-const connecting = ref(false)
 const error = ref('')
 const message = ref('')
 const remotes = ref<RemoteWorkspace[]>([])
-const authConfig = ref<AuthConfig | null>(null)
 
 const status = computed(() => state.sync)
 
 onMounted(async () => {
   await refreshSyncStatus()
-  server.value = state.sync?.server || state.settings?.syncServer || ''
-  username.value = state.sync?.username || ''
   if (state.sync?.loggedIn) void loadRemotes()
-  else if (server.value) void connect()
 })
-
-// Ask the server which sign-in methods it offers, so we show the right UI.
-async function connect() {
-  if (!server.value.trim()) {
-    error.value = 'Enter a server URL.'
-    return
-  }
-  connecting.value = true
-  error.value = ''
-  try {
-    authConfig.value = await SyncAuthConfig(server.value.trim())
-  } catch (e) {
-    authConfig.value = null
-    error.value = `Couldn't reach that server: ${e}`
-  } finally {
-    connecting.value = false
-  }
-}
-
-async function loginSSO() {
-  busy.value = true
-  error.value = ''
-  message.value = ''
-  try {
-    await SyncLoginSSO(server.value.trim())
-    await syncSettingsFromBackend()
-    await refreshSyncStatus()
-    await loadRemotes()
-  } catch (e) {
-    error.value = String(e)
-  } finally {
-    busy.value = false
-  }
-}
-
-// Keep the persisted settings (incl. the token) in sync with the backend so a
-// later save of the general settings form doesn't wipe the sync credentials.
-async function syncSettingsFromBackend() {
-  state.settings = await GetSettings()
-}
-
-async function auth(kind: 'login' | 'register') {
-  if (!server.value.trim() || !username.value.trim() || !password.value) {
-    error.value = 'Server, username, and password are required.'
-    return
-  }
-  busy.value = true
-  error.value = ''
-  message.value = ''
-  try {
-    const fn = kind === 'login' ? SyncLogin : SyncRegister
-    await fn(server.value.trim(), username.value.trim(), password.value)
-    await syncSettingsFromBackend()
-    await refreshSyncStatus()
-    password.value = ''
-    await loadRemotes()
-  } catch (e) {
-    error.value = String(e)
-  } finally {
-    busy.value = false
-  }
-}
+// Sign-in happens in the child component; load remotes once it succeeds.
+watch(
+  () => state.sync?.loggedIn,
+  (li) => {
+    if (li) void loadRemotes()
+  },
+)
 
 async function logout() {
   busy.value = true
   try {
     await SyncLogout()
-    await syncSettingsFromBackend()
+    state.settings = await GetSettings()
     await refreshSyncStatus()
     remotes.value = []
   } finally {
@@ -183,55 +113,8 @@ function when(iso: string) {
     <p v-if="error" class="sync-error">{{ error }}</p>
     <p v-if="message" class="sync-ok">{{ message }}</p>
 
-    <!-- Signed out -->
-    <div v-if="!status?.loggedIn">
-      <!-- Step 1: pick a server -->
-      <div v-if="!authConfig" class="sync-form">
-        <label>Server URL
-          <input v-model="server" placeholder="https://sync.example.com" :disabled="connecting" @keydown.enter="connect" />
-        </label>
-        <div class="sync-actions">
-          <button class="btn primary" :disabled="connecting" @click="connect">
-            {{ connecting ? 'Checking…' : 'Connect' }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Step 2: sign in with whatever the server offers -->
-      <div v-else class="sync-signin">
-        <p class="hint">
-          {{ server }} · <a class="sync-link" @click="authConfig = null">change server</a>
-        </p>
-
-        <button
-          v-if="authConfig.ssoEnabled"
-          class="btn primary sync-sso"
-          :disabled="busy"
-          @click="loginSSO"
-        >
-          {{ busy ? 'Waiting for your browser…' : `Sign in with ${authConfig.ssoName || 'SSO'}` }}
-        </button>
-
-        <div v-if="authConfig.ssoEnabled && authConfig.passwordEnabled" class="sync-or">— or —</div>
-
-        <div v-if="authConfig.passwordEnabled" class="sync-form">
-          <label>Username
-            <input v-model="username" placeholder="you" :disabled="busy" autocomplete="username" />
-          </label>
-          <label>Password
-            <input v-model="password" type="password" :disabled="busy" autocomplete="current-password" @keydown.enter="auth('login')" />
-          </label>
-          <div class="sync-actions">
-            <button class="btn primary" :disabled="busy" @click="auth('login')">Log in</button>
-            <button class="btn" :disabled="busy" @click="auth('register')">Create account</button>
-          </div>
-        </div>
-
-        <p v-if="!authConfig.ssoEnabled && !authConfig.passwordEnabled" class="hint">
-          This server has no sign-in methods enabled.
-        </p>
-      </div>
-    </div>
+    <!-- Signed out: reusable sign-in -->
+    <SyncSignIn v-if="!status?.loggedIn" class="sync-form" />
 
     <!-- Signed in -->
     <div v-else class="sync-account">

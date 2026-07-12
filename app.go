@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -1153,6 +1154,47 @@ func (a *App) SyncLinkPull(remoteID string) (*SyncOutcome, error) {
 		return nil, err
 	}
 	return a.syncOutcome(res)
+}
+
+// SyncCloneWorkspace pulls a remote workspace into a new local folder (named
+// after the remote) under parentDir, then opens it. This lets the launch screen
+// offer "sign in and pick a synced project" without first creating an empty one.
+func (a *App) SyncCloneWorkspace(remoteID, parentDir string) (*model.Workspace, error) {
+	c, _, account, err := a.syncClient()
+	if err != nil {
+		return nil, err
+	}
+	if remoteID == "" || parentDir == "" {
+		return nil, fmt.Errorf("a remote workspace and a destination folder are required")
+	}
+	// remoteID comes from the server's list — don't trust it as a path. It must
+	// be a single, safe folder segment, and the joined path must stay under the
+	// folder the user picked (guards against a hostile server returning "..").
+	if remoteID == "." || remoteID == ".." || strings.ContainsAny(remoteID, `/\`) || filepath.IsAbs(remoteID) {
+		return nil, fmt.Errorf("invalid remote workspace id %q", remoteID)
+	}
+	local := filepath.Join(parentDir, remoteID)
+	absParent, err := filepath.Abs(parentDir)
+	if err != nil {
+		return nil, err
+	}
+	absLocal, err := filepath.Abs(local)
+	if err != nil {
+		return nil, err
+	}
+	if absLocal != absParent && !strings.HasPrefix(absLocal, absParent+string(filepath.Separator)) {
+		return nil, fmt.Errorf("destination escapes the chosen folder")
+	}
+	if entries, err := os.ReadDir(local); err == nil && len(entries) > 0 {
+		return nil, fmt.Errorf("%q already exists and isn't empty — pick another folder", local)
+	}
+	if err := os.MkdirAll(local, 0o755); err != nil {
+		return nil, err
+	}
+	if _, err := syncclient.LinkPull(local, remoteID, c, account); err != nil {
+		return nil, err
+	}
+	return a.OpenWorkspace(local)
 }
 
 // syncOutcome reloads the workspace from disk (sync may have changed files) and
