@@ -15,9 +15,11 @@ import {
   confirmDialog,
   openTab,
   promptInput,
+  refreshSyncStatus,
   schemaTypes,
   setWorkspace,
   state,
+  syncNow,
   tabKey,
 } from '../store'
 import type { CodexEntry } from '../types'
@@ -111,11 +113,36 @@ function openChapterMenu(e: MouseEvent, bookId: string, chapter: string) {
 function closeMenu() {
   ctx.value = null
 }
-onMounted(() => window.addEventListener('click', closeMenu))
+onMounted(() => {
+  window.addEventListener('click', closeMenu)
+  void refreshSyncStatus()
+})
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu)
   endResize()
 })
+
+// ---- one-click sync (only shown when a sync account is connected) ----
+const syncing = ref(false)
+async function runSync() {
+  if (syncing.value) return
+  syncing.value = true
+  error.value = ''
+  try {
+    const r = await syncNow()
+    const bits = [`↑${r.pushed}`, `↓${r.pulled}`]
+    const conflicts = r.conflicts ?? []
+    if (conflicts.length) bits.push(`⚠${conflicts.length} conflict(s)`)
+    error.value = '' // clear; show a brief success in the project row title instead
+    syncMsg.value = bits.join(' ')
+    window.setTimeout(() => (syncMsg.value = ''), 5000)
+  } catch (e) {
+    error.value = `Sync failed: ${e}`
+  } finally {
+    syncing.value = false
+  }
+}
+const syncMsg = ref('')
 
 // ---- user-resizable width (min = default, no maximum) ----
 const MIN_WIDTH = 240
@@ -314,7 +341,18 @@ function runCtx(action: string) {
       <div class="sb-project" :title="state.workspace?.path">
         {{ state.workspace?.manifest.name }}
       </div>
+      <div v-if="syncMsg" class="sb-sync-msg">✓ synced {{ syncMsg }}</div>
       <div class="sb-actions">
+        <button
+          v-if="state.sync?.loggedIn"
+          class="btn icon"
+          :class="{ spinning: syncing }"
+          :title="syncMsg ? `Synced ${syncMsg}` : 'Sync this workspace'"
+          :disabled="syncing"
+          @click="runSync"
+        >
+          ⟳
+        </button>
         <button class="btn icon" title="Search &amp; replace across the project" @click="openTab({ kind: 'search' })">🔍</button>
         <button class="btn icon" title="Revision history &amp; snapshots" @click="openTab({ kind: 'history' })">🕓</button>
         <button class="btn icon" title="Relationship graph" @click="openTab({ kind: 'graph' })">🕸</button>
@@ -541,6 +579,18 @@ function runCtx(action: string) {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+.sb-sync-msg {
+  font-size: 11px;
+  color: #6fcf97;
+}
+.btn.icon.spinning {
+  animation: sb-spin 0.8s linear infinite;
+}
+@keyframes sb-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .sb-footer .btn.icon {
   font-size: 13px;

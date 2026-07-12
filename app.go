@@ -2,9 +2,13 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -23,6 +27,8 @@ import (
 	"novelide/internal/spell"
 	"novelide/internal/spellcheck"
 	"novelide/internal/stats"
+	"novelide/internal/syncclient"
+	"novelide/internal/syncproto"
 	"novelide/internal/workspace"
 )
 
@@ -885,6 +891,278 @@ func (a *App) DeleteSnapshot(id string) ([]history.Snapshot, error) {
 		return nil, err
 	}
 	return history.List(path)
+}
+
+// --- Optional sync ---
+//
+// All sync is opt-in: with no server configured the app is fully offline and
+// none of this runs. Credentials live in the app settings; per-workspace link
+// state lives in the workspace's .novelide/sync.json.
+
+// SyncStatus reports the app's sync configuration for the UI.
+type SyncStatus struct {
+	Configured bool   `json:"configured"` // a server URL is set
+	LoggedIn   bool   `json:"loggedIn"`   // a token is held
+	Server     string `json:"server"`
+	Username   string `json:"username"`
+	Linked     bool   `json:"linked"`   // the open workspace is linked to a remote
+	RemoteID   string `json:"remoteId"` // that remote's id
+}
+
+// SyncOutcome is returned by operations that may change local files, carrying
+// both what happened and the refreshed workspace to re-render.
+type SyncOutcome struct {
+	Result    syncclient.Result `json:"result"`
+	Workspace *model.Workspace  `json:"workspace"`
+}
+
+// syncClient builds an authenticated client and returns the open workspace path
+// and the signed-in account id (used to scope per-workspace sync state).
+func (a *App) syncClient() (client *syncclient.Client, wsPath, account string, err error) {
+	a.mu.RLock()
+	s, ws := a.settings, a.ws
+	a.mu.RUnlock()
+	if s.SyncServer == "" {
+		return nil, "", "", fmt.Errorf("sync is not configured")
+	}
+	if s.SyncToken == "" {
+		return nil, "", "", fmt.Errorf("not logged in to the sync server")
+	}
+	if ws != nil {
+		wsPath = ws.Path
+	}
+	return syncclient.New(s.SyncServer, s.SyncToken), wsPath, s.SyncAccountID, nil
+}
+
+func (a *App) saveSyncSettings(server, username, token, accountID string) error {
+	a.mu.Lock()
+	a.settings.SyncServer = server
+	a.settings.SyncUsername = username
+	a.settings.SyncToken = token
+	a.settings.SyncAccountID = accountID
+	s := a.settings
+	a.mu.Unlock()
+	return settings.Save(s)
+}
+
+// SyncStatus returns the current sync state.
+func (a *App) SyncStatus() SyncStatus {
+	a.mu.RLock()
+	s, ws := a.settings, a.ws
+	a.mu.RUnlock()
+	st := SyncStatus{
+		Configured: s.SyncServer != "",
+		LoggedIn:   s.SyncServer != "" && s.SyncToken != "",
+		Server:     s.SyncServer,
+		Username:   s.SyncUsername,
+	}
+	if ws != nil {
+		if rid := syncclient.LinkedRemoteID(ws.Path); rid != "" {
+			st.Linked = true
+			st.RemoteID = rid
+		}
+	}
+	return st
+}
+
+func normalizeServer(server string) string {
+	return strings.TrimRight(strings.TrimSpace(server), "/")
+}
+
+// SyncRegister creates an account on the given server and logs in.
+func (a *App) SyncRegister(server, username, password string) (SyncStatus, error) {
+	server = normalizeServer(server)
+	if server == "" {
+		return SyncStatus{}, fmt.Errorf("a server URL is required")
+	}
+	c := syncclient.New(server, "")
+	auth, err := c.Register(username, password)
+	if err != nil {
+		return SyncStatus{}, err
+	}
+	if err := a.saveSyncSettings(server, auth.Username, auth.Token, auth.AccountID); err != nil {
+		return SyncStatus{}, err
+	}
+	return a.SyncStatus(), nil
+}
+
+// SyncLogin authenticates against the given server.
+func (a *App) SyncLogin(server, username, password string) (SyncStatus, error) {
+	server = normalizeServer(server)
+	if server == "" {
+		return SyncStatus{}, fmt.Errorf("a server URL is required")
+	}
+	c := syncclient.New(server, "")
+	auth, err := c.Login(username, password)
+	if err != nil {
+		return SyncStatus{}, err
+	}
+	if err := a.saveSyncSettings(server, auth.Username, auth.Token, auth.AccountID); err != nil {
+		return SyncStatus{}, err
+	}
+	return a.SyncStatus(), nil
+}
+
+// SyncLogout clears the stored token (keeping the server URL for convenience).
+func (a *App) SyncLogout() (SyncStatus, error) {
+	a.mu.RLock()
+	server := a.settings.SyncServer
+	a.mu.RUnlock()
+	if err := a.saveSyncSettings(server, "", "", ""); err != nil {
+		return SyncStatus{}, err
+	}
+	return a.SyncStatus(), nil
+}
+
+// SyncAuthConfig reports which sign-in methods a server offers, so the UI can
+// show a password form, an SSO button, or both.
+func (a *App) SyncAuthConfig(server string) (syncproto.AuthConfig, error) {
+	server = normalizeServer(server)
+	if server == "" {
+		return syncproto.AuthConfig{}, fmt.Errorf("a server URL is required")
+	}
+	return syncclient.New(server, "").AuthConfig()
+}
+
+// SyncLoginSSO signs in via the server's OIDC provider. It opens the system
+// browser at the server's SSO endpoint and listens on a loopback port for the
+// server to hand back a session token once sign-in completes.
+func (a *App) SyncLoginSSO(server string) (SyncStatus, error) {
+	server = normalizeServer(server)
+	if server == "" {
+		return SyncStatus{}, fmt.Errorf("a server URL is required")
+	}
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return SyncStatus{}, fmt.Errorf("could not open a local callback port: %w", err)
+	}
+	port := ln.Addr().(*net.TCPAddr).Port
+	appState := randomToken()
+
+	type result struct {
+		token string
+		err   error
+	}
+	done := make(chan result, 1)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if q.Get("state") != appState || q.Get("token") == "" {
+			fmt.Fprint(w, ssoBrowserPage("Sign-in failed. You can close this window."))
+			select {
+			case done <- result{err: fmt.Errorf("sign-in did not complete")}:
+			default:
+			}
+			return
+		}
+		fmt.Fprint(w, ssoBrowserPage("Signed in. You can close this window and return to NovelIDE."))
+		select {
+		case done <- result{token: q.Get("token")}:
+		default:
+		}
+	})
+	httpSrv := &http.Server{Handler: mux}
+	go httpSrv.Serve(ln)
+	defer httpSrv.Close()
+
+	redirect := fmt.Sprintf("http://127.0.0.1:%d/callback", port)
+	startURL := server + "/api/sso/start?app_redirect=" + url.QueryEscape(redirect) + "&app_state=" + url.QueryEscape(appState)
+	runtime.BrowserOpenURL(a.ctx, startURL)
+
+	var token string
+	select {
+	case res := <-done:
+		if res.err != nil {
+			return SyncStatus{}, res.err
+		}
+		token = res.token
+	case <-time.After(5 * time.Minute):
+		return SyncStatus{}, fmt.Errorf("timed out waiting for browser sign-in")
+	case <-a.ctx.Done():
+		return SyncStatus{}, fmt.Errorf("cancelled")
+	}
+
+	// Learn the account the server provisioned for this identity.
+	me, err := syncclient.New(server, token).Me()
+	if err != nil {
+		return SyncStatus{}, err
+	}
+	if err := a.saveSyncSettings(server, me.Username, token, me.AccountID); err != nil {
+		return SyncStatus{}, err
+	}
+	return a.SyncStatus(), nil
+}
+
+func randomToken() string {
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
+func ssoBrowserPage(msg string) string {
+	return "<!doctype html><meta charset=utf-8><title>NovelIDE sign-in</title>" +
+		"<body style=\"font-family:system-ui;padding:3rem;text-align:center\">" +
+		"<h2>NovelIDE</h2><p>" + msg + "</p></body>"
+}
+
+// RemoteWorkspaces lists the account's workspaces on the server.
+func (a *App) RemoteWorkspaces() ([]syncproto.WorkspaceMeta, error) {
+	c, _, _, err := a.syncClient()
+	if err != nil {
+		return nil, err
+	}
+	return c.Workspaces()
+}
+
+// SyncNow syncs the open workspace, auto-linking it (by its folder name) on the
+// first run, then reloads it so any pulled changes appear.
+func (a *App) SyncNow() (*SyncOutcome, error) {
+	c, wsPath, account, err := a.syncClient()
+	if err != nil {
+		return nil, err
+	}
+	if wsPath == "" {
+		return nil, fmt.Errorf("no workspace open")
+	}
+	if syncclient.LinkedRemoteID(wsPath) == "" {
+		if err := syncclient.Link(wsPath, syncclient.DeriveRemoteID(wsPath), c.BaseURL, account); err != nil {
+			return nil, err
+		}
+	}
+	res, err := syncclient.Sync(wsPath, c, account)
+	if err != nil {
+		return nil, err
+	}
+	return a.syncOutcome(res)
+}
+
+// SyncLinkPull links the open workspace to an existing remote and pulls it —
+// used to join a workspace already synced from another device.
+func (a *App) SyncLinkPull(remoteID string) (*SyncOutcome, error) {
+	c, wsPath, account, err := a.syncClient()
+	if err != nil {
+		return nil, err
+	}
+	if wsPath == "" {
+		return nil, fmt.Errorf("no workspace open")
+	}
+	res, err := syncclient.LinkPull(wsPath, remoteID, c, account)
+	if err != nil {
+		return nil, err
+	}
+	return a.syncOutcome(res)
+}
+
+// syncOutcome reloads the workspace from disk (sync may have changed files) and
+// packages the result for the frontend.
+func (a *App) syncOutcome(res syncclient.Result) (*SyncOutcome, error) {
+	ws, err := a.reload()
+	if err != nil {
+		return nil, err
+	}
+	return &SyncOutcome{Result: res, Workspace: ws}, nil
 }
 
 // Backlink is one chapter that mentions a codex entity.

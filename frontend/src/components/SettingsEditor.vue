@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref, watch } from 'vue'
 import { AppVersion, GetSettings, SaveSettings, SelectFolder, SpellStatus } from '../api'
 import { pinActiveTab, state } from '../store'
+import SyncSettings from './SyncSettings.vue'
 
 const FONT_PRESETS = ['serif', 'sans', 'mono']
 
@@ -90,6 +91,12 @@ async function save() {
       editorSpellcheck: form.spellcheck,
       editorRawMarkup: !form.livePreview,
       spellcheckLang: form.spellcheckLang.trim(),
+      // Round-trip the sync credentials so saving the general form never wipes
+      // them (they're managed by the Sync section below).
+      syncServer: state.settings?.syncServer ?? '',
+      syncUsername: state.settings?.syncUsername ?? '',
+      syncToken: state.settings?.syncToken ?? '',
+      syncAccountId: state.settings?.syncAccountId ?? '',
       recent: state.settings?.recent ?? [],
     })
     message.value = 'Saved.'
@@ -243,6 +250,8 @@ async function save() {
         <li v-for="r in state.settings?.recent ?? []" :key="r">{{ r }}</li>
       </ul>
     </section>
+
+    <SyncSettings />
 
     <section>
       <h3>About</h3>

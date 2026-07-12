@@ -1,0 +1,11 @@
+# Keep the Docker build context (for the sync server) small and fast.
+.git
+frontend/node_modules
+frontend/dist
+build/bin
+build/flatpak/.flatpak-build
+build/flatpak/.flatpak-repo
+build/flatpak/.flatpak-builder
+build/flatpak/*.flatpak
+sync-data
+*.log

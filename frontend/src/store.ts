@@ -1,7 +1,8 @@
 // Central reactive state for the IDE, shared via composables (no Pinia
 // needed at this size).
 import { computed, reactive } from 'vue'
-import { ReadImageDataURL } from './api'
+import { ReadImageDataURL, SyncLinkPull, SyncNow, SyncStatusGet } from './api'
+import type { SyncOutcome } from './types'
 import type {
   CardData,
   CardStatusLine,
@@ -12,6 +13,8 @@ import type {
   Settings,
   StoryPoint,
   Suggestion,
+  SyncResult,
+  SyncStatus,
   TypeDef,
   Workspace,
 } from './types'
@@ -133,6 +136,8 @@ interface State {
   /** bumped when chapter files change on disk (e.g. project replace), so the
    *  open editor reloads its content */
   reloadTick: number
+  /** optional-sync status (null until first fetched) */
+  sync: SyncStatus | null
 }
 
 export const state = reactive<State>({
@@ -148,6 +153,7 @@ export const state = reactive<State>({
   statsTick: 0,
   pendingJump: null,
   reloadTick: 0,
+  sync: null,
 })
 
 export const codexById = computed(() => {
@@ -405,6 +411,33 @@ export function openChapterAtLine(bookId: string, chapter: string, line: number)
   openTab(tab)
   pinTab(tabKey(tab))
 }
+
+/** Refresh the optional-sync status (safe no-op if unconfigured). */
+export async function refreshSyncStatus() {
+  try {
+    state.sync = await SyncStatusGet()
+  } catch {
+    state.sync = null
+  }
+}
+
+// Apply a sync outcome: adopt the refreshed workspace, nudge the open editor to
+// re-read pulled files, and refresh status. Throws on failure so callers can
+// surface the message.
+async function applySyncOutcome(p: Promise<SyncOutcome>): Promise<SyncResult> {
+  const outcome = await p
+  setWorkspace(outcome.workspace)
+  state.reloadTick++
+  await refreshSyncStatus()
+  return outcome.result
+}
+
+/** Sync the open workspace (auto-links it on first run). */
+export const syncNow = (): Promise<SyncResult> => applySyncOutcome(SyncNow())
+
+/** Link the open workspace to an existing remote and pull it. */
+export const syncLinkPull = (remoteId: string): Promise<SyncResult> =>
+  applySyncOutcome(SyncLinkPull(remoteId))
 
 /** Pin a tab so it stops being a self-closing preview. */
 export function pinTab(key: string) {

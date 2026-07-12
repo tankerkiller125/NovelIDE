@@ -82,6 +82,47 @@ export interface ChapterScenes {
   scenes: Scene[]
 }
 
+/** Which sign-in methods a sync server offers. */
+export interface AuthConfig {
+  passwordEnabled: boolean
+  ssoEnabled: boolean
+  ssoName?: string
+}
+
+/** Sync configuration/state reported by the backend. */
+export interface SyncStatus {
+  configured: boolean
+  loggedIn: boolean
+  server: string
+  username: string
+  linked: boolean
+  remoteId: string
+}
+
+/** What a sync did. */
+export interface SyncResult {
+  revision: number
+  pushed: number
+  pulled: number
+  deleted: number
+  conflicts: string[]
+  remoteId: string
+}
+
+/** A workspace on the sync server. */
+export interface RemoteWorkspace {
+  id: string
+  name: string
+  revision: number
+  updatedAt: string
+}
+
+/** Result of a sync plus the refreshed workspace to re-render. */
+export interface SyncOutcome {
+  result: SyncResult
+  workspace: Workspace
+}
+
 /** One captured revision of the workspace. */
 export interface Snapshot {
   id: string
@@ -298,6 +339,11 @@ export interface Settings {
   editorRawMarkup: boolean
   /** spellcheck dictionary language, e.g. "en_US" */
   spellcheckLang: string
+  /** optional sync (empty server = off) */
+  syncServer: string
+  syncUsername: string
+  syncToken: string
+  syncAccountId: string
   recent: string[]
 }
 

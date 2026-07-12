@@ -38,6 +38,15 @@ type Settings struct {
 	EditorRawMarkup bool `json:"editorRawMarkup"`
 	// SpellcheckLang is the dictionary language, e.g. "en_US".
 	SpellcheckLang string `json:"spellcheckLang"`
+
+	// Optional sync server. Empty SyncServer means sync is off (the default).
+	// SyncToken is the bearer token from the last login; SyncUsername is shown
+	// in the UI. These are only set when the user opts into sync.
+	SyncServer    string `json:"syncServer"`
+	SyncUsername  string `json:"syncUsername"`
+	SyncToken     string `json:"syncToken"`
+	SyncAccountID string `json:"syncAccountId"`
+
 	// Recent lists recently opened workspace paths, most recent first.
 	Recent []string `json:"recent"`
 }

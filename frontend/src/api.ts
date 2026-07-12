@@ -12,8 +12,12 @@ import type {
   ExportOptions,
   ExportTheme,
   RenameChapterResult,
+  AuthConfig,
   ScanResult,
   SearchResults,
+  SyncOutcome,
+  SyncStatus,
+  RemoteWorkspace,
   WritingStats,
   Schema,
   SeriesPlan,
@@ -125,6 +129,35 @@ export const ExportSave = (opts: ExportOptions): Promise<string> => app().Export
 export const RecordWritingProgress = (): Promise<WritingStats> => app().RecordWritingProgress()
 
 export const SetDailyGoal = (goal: number): Promise<WritingStats> => app().SetDailyGoal(goal)
+
+// --- optional sync ---
+export const SyncStatusGet = (): Promise<SyncStatus> => app().SyncStatus()
+
+export const SyncRegister = (
+  server: string,
+  username: string,
+  password: string,
+): Promise<SyncStatus> => app().SyncRegister(server, username, password)
+
+export const SyncLogin = (
+  server: string,
+  username: string,
+  password: string,
+): Promise<SyncStatus> => app().SyncLogin(server, username, password)
+
+export const SyncLogout = (): Promise<SyncStatus> => app().SyncLogout()
+
+export const SyncAuthConfig = (server: string): Promise<AuthConfig> =>
+  app().SyncAuthConfig(server)
+
+export const SyncLoginSSO = (server: string): Promise<SyncStatus> => app().SyncLoginSSO(server)
+
+export const RemoteWorkspaces = (): Promise<RemoteWorkspace[]> => app().RemoteWorkspaces()
+
+export const SyncNow = (): Promise<SyncOutcome> => app().SyncNow()
+
+export const SyncLinkPull = (remoteId: string): Promise<SyncOutcome> =>
+  app().SyncLinkPull(remoteId)
 
 export const Backlinks = (entryId: string): Promise<Backlink[]> => app().Backlinks(entryId)
 
