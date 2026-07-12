@@ -53,6 +53,18 @@ func main() {
 		Title:  "NovelIDE",
 		Width:  1400,
 		Height: 900,
+		// Wails' Linux backend always applies a GTK max-size geometry hint,
+		// and when MaxWidth/MaxHeight are 0 it caps the window to the current
+		// monitor's size — so the window can't be resized beyond one screen.
+		// Set an effectively-unlimited max to lift that cap. 1,000,000 px is
+		// ~195x the long axis of a 5120-wide ultrawide and dwarfs any realistic
+		// multi-monitor wall, while staying far below the C int (int32, ~2.1e9)
+		// limit that the Wayland decorator adjustment (decorator + max) adds to.
+		// A sensible floor keeps the layout from collapsing.
+		MinWidth:  900,
+		MinHeight: 600,
+		MaxWidth:  1000000,
+		MaxHeight: 1000000,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
