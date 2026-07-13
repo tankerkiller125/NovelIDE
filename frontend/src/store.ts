@@ -15,6 +15,7 @@ import type {
   Suggestion,
   SyncResult,
   SyncStatus,
+  TimelinedFieldNow,
   TypeDef,
   Workspace,
 } from './types'
@@ -335,6 +336,8 @@ export function cardDataAt(entryId: string, bookId: string, chapter: string): Ca
     ;(active ? activeRelations : inactiveRelations).push(r)
   }
 
+  const timelinedFields = resolveTimelinedFields(entry, here)
+
   if (entry.image) void ensureImage(entry.image)
   return {
     entry,
@@ -344,11 +347,55 @@ export function cardDataAt(entryId: string, bookId: string, chapter: string): Ca
     activeRelations,
     inactiveRelations,
     statusTimeline,
+    timelinedFields,
   }
+}
+
+// resolveTimelinedFields picks each timelined field's value in effect at the
+// reading position `here` (the most recent value anchored at/before it), and
+// keeps the full history for the expanded view. When the position is unknown
+// (here < 0) it falls back to the latest value so the card isn't blank.
+function resolveTimelinedFields(entry: CodexEntry, here: number): TimelinedFieldNow[] {
+  const out: TimelinedFieldNow[] = []
+  const timelines = entry.fieldTimelines ?? {}
+  for (const key of Object.keys(timelines)) {
+    const vals = timelines[key] ?? []
+    if (!vals.length) continue
+    let bestPos = -Infinity
+    let bestIdx = -1
+    vals.forEach((v, i) => {
+      const p = positionOf(v.at)
+      if (p < 0) return
+      if (here >= 0 && p > here) return // future — don't spoil
+      if (p >= bestPos) {
+        bestPos = p
+        bestIdx = i
+      }
+    })
+    const history = vals.map((v, i) => ({
+      value: v.value,
+      anchor: storyPointLabel(v.at) || 'from the start',
+      current: i === bestIdx,
+    }))
+    out.push({
+      key,
+      value: bestIdx >= 0 ? vals[bestIdx].value : '',
+      anchor: bestIdx >= 0 ? storyPointLabel(vals[bestIdx].at) || 'from the start' : '',
+      history,
+    })
+  }
+  return out
 }
 
 export function setWorkspace(ws: Workspace) {
   state.workspace = ws
+  // Seed dismissed suggestions from the (persisted, synced) workspace. Union
+  // with any set this session so an in-flight local dismissal isn't dropped by
+  // a concurrent reload before it has persisted.
+  state.dismissedSuggestions = new Set([
+    ...(ws.dismissed ?? []),
+    ...state.dismissedSuggestions,
+  ])
   // Preload codex images so hover cards and the codex editor show them.
   for (const e of ws.codex ?? []) if (e.image) void ensureImage(e.image)
   // Drop tabs pointing at things that no longer exist.

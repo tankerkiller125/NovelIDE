@@ -73,9 +73,26 @@ var perfectAux = map[string]bool{"had": true, "has": true, "have": true, "hadn't
 // participle ("lay dead", "seemed lost") but are real actions otherwise
 // ("lay down", "looked around").
 var semiLinking = map[string]bool{
-	"lay": true, "lies": true, "seemed": true, "seems": true,
+	"seemed": true, "seems": true,
 	"appeared": true, "appears": true, "looked": true, "looks": true,
 	"felt": true, "feels": true, "remained": true, "remains": true,
+}
+
+// posture verbs describe a body's position. A dead or destroyed entity can
+// perfectly well lie, sit, or rest somewhere ("the spot where James lay"), so
+// these read as a state, not an action — unless a motion particle marks a
+// deliberate change of position ("lay down", "sat up"), which a corpse can't do.
+var posture = map[string]bool{
+	"lay": true, "lie": true, "lies": true, "lying": true, "lain": true, "laid": true,
+	"sat": true, "sits": true, "sitting": true,
+	"rested": true, "rests": true, "resting": true,
+	"sprawled": true, "slumped": true, "slouched": true, "reclined": true,
+	"knelt": true, "crouched": true, "hung": true, "hangs": true,
+}
+
+// motionParticle marks the deliberate-movement sense of a posture verb.
+var motionParticle = map[string]bool{
+	"down": true, "up": true, "back": true, "forward": true, "over": true,
 }
 
 // Timeline resolves (book, chapter) pairs to a global ordinal so status
@@ -147,6 +164,30 @@ func (t *Timeline) StateAt(e *model.CodexEntry, bookID, chapter string) string {
 		}
 	}
 	return state
+}
+
+// valueAt resolves a timelined field to the value in effect at the given
+// chapter: the most recent value anchored at or before it (a nil anchor means
+// "from the start"). When the position is unknown it falls back to the latest
+// value. Returns "" if no value applies yet.
+func (t *Timeline) valueAt(vals []model.TimedValue, bookID, chapter string) string {
+	here := t.position(model.StoryPoint{Book: bookID, Chapter: chapter})
+	best := -1
+	val := ""
+	for _, tv := range vals {
+		p := 0
+		if tv.At != nil {
+			p = t.position(*tv.At)
+		}
+		if p < 0 || (here >= 0 && p > here) {
+			continue
+		}
+		if p >= best {
+			best = p
+			val = tv.Value
+		}
+	}
+	return val
 }
 
 // mentionRole classifies how a mention participates in its sentence.
@@ -227,14 +268,28 @@ func classify(doc *nlp.Doc, sp match.Span) (mentionRole, string) {
 			return rolePatient, t.Text + " " + n.Text
 		}
 		return roleReference, "" // "was dead", "was a legend", "was there"
+	case posture[word]:
+		// "James lay down" / "sat up" — a deliberate change of position is an
+		// action; a corpse can't do it. Look a token or two ahead (past any
+		// adverb) for the motion particle.
+		for j := i + 1; j < len(toks) && j <= i+2; j++ {
+			if motionParticle[strings.ToLower(toks[j].Text)] {
+				return roleAgent, t.Text + " " + toks[j].Text
+			}
+			if toks[j].Tag == "RB" || toks[j].Tag == "," {
+				continue
+			}
+			break
+		}
+		return roleReference, "" // "where James lay", "James lay dead / still"
 	case semiLinking[word]:
 		// Tag check plus a small lexicon: the tagger occasionally calls
 		// "lifeless" a noun.
 		if n := next(); n != nil &&
 			(n.Tag == "JJ" || n.Tag == "VBN" || deadAdjectives[strings.ToLower(n.Text)]) {
-			return roleReference, "" // "lay dead", "seemed lost"
+			return roleReference, "" // "seemed lost", "looked dead"
 		}
-		return roleAgent, t.Text // "lay down", "looked around"
+		return roleAgent, t.Text // "looked around"
 	case nlp.IsVerb(t.Tag): // open class: any tagged verb is an action
 		return roleAgent, t.Text
 	}

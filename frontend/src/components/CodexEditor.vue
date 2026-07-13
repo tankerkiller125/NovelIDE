@@ -14,7 +14,7 @@ import {
   state,
   tabKey,
 } from '../store'
-import type { Backlink, CodexEntry, Relation, StatusChange } from '../types'
+import type { Backlink, CodexEntry, Relation, StatusChange, TimedValue } from '../types'
 
 const props = defineProps<{ entryId: string; draft?: CodexEntry }>()
 
@@ -28,6 +28,7 @@ function blankEntry(): CodexEntry {
     details: '',
     image: '',
     fields: {},
+    fieldTimelines: {},
     status: [],
     relations: [],
     scope: 'series',
@@ -53,6 +54,18 @@ interface RelationRow {
   note: string
 }
 
+// A fact that changes over story time: one key with several values, each
+// anchored to a story point ("from the start" when no book is chosen).
+interface TimelineValueRow {
+  value: string
+  book: string
+  chapter: string
+}
+interface TimelineField {
+  key: string
+  values: TimelineValueRow[]
+}
+
 const form = reactive({
   name: '',
   type: 'character',
@@ -61,6 +74,7 @@ const form = reactive({
   details: '',
   scope: 'series',
   fields: [] as FieldRow[],
+  fieldTimelines: [] as TimelineField[],
   status: [] as StatusChange[],
   relations: [] as RelationRow[],
 })
@@ -102,6 +116,14 @@ function loadForm() {
   form.details = e.details ?? ''
   form.scope = e.scope || 'series'
   form.fields = Object.entries(e.fields ?? {}).map(([key, value]) => ({ key, value }))
+  form.fieldTimelines = Object.entries(e.fieldTimelines ?? {}).map(([key, values]) => ({
+    key,
+    values: (values ?? []).map((v) => ({
+      value: v.value,
+      book: v.at?.book ?? '',
+      chapter: v.at?.chapter ?? '',
+    })),
+  }))
   form.status = (e.status ?? []).map((s) => ({
     state: s.state,
     at: { book: s.at?.book ?? '', chapter: s.at?.chapter ?? '' },
@@ -184,6 +206,12 @@ const backlinkTotal = computed(() => backlinks.value.reduce((n, b) => n + b.coun
 function addField(key = '') {
   form.fields.push({ key, value: '' })
 }
+function addTimelineField() {
+  form.fieldTimelines.push({ key: '', values: [{ value: '', book: '', chapter: '' }] })
+}
+function addTimelineValue(tf: TimelineField) {
+  tf.values.push({ value: '', book: '', chapter: '' })
+}
 function addStatus() {
   form.status.push({
     state: form.status.length ? 'dead' : 'alive',
@@ -224,6 +252,20 @@ async function save() {
     image: old?.image ?? '', // preserve the portrait across edits
     fields: Object.fromEntries(
       form.fields.filter((f) => f.key.trim()).map((f) => [f.key.trim(), f.value]),
+    ),
+    fieldTimelines: Object.fromEntries(
+      form.fieldTimelines
+        .filter((tf) => tf.key.trim() && tf.values.some((v) => v.value.trim()))
+        .map((tf): [string, TimedValue[]] => [
+          tf.key.trim(),
+          tf.values
+            .filter((v) => v.value.trim())
+            .map((v) => ({
+              value: v.value,
+              at: v.book ? { book: v.book, chapter: v.chapter || undefined } : undefined,
+              note: undefined,
+            })),
+        ]),
     ),
     status: form.status
       .filter((s) => s.state.trim())
@@ -360,6 +402,38 @@ async function remove() {
         <input v-model="f.key" placeholder="age" class="ce-key" />
         <input v-model="f.value" placeholder="27" class="ce-val" />
         <button class="btn icon" @click="form.fields.splice(i, 1)">✕</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="ce-sect-head">
+        <h3>Facts that change over time</h3>
+        <button class="btn" @click="addTimelineField">+ Add timelined fact</button>
+      </div>
+      <p class="hint">
+        For a fact that changes across the story — a character's age, a title, a location.
+        Give the values in order; each takes effect from its story point (leave the first
+        "from the start") and hover cards show the value current at where you're reading.
+      </p>
+      <div v-for="(tf, ti) in form.fieldTimelines" :key="ti" class="ce-timeline">
+        <div class="ce-row">
+          <input v-model="tf.key" placeholder="age" class="ce-key" />
+          <span class="hint">changes over time</span>
+          <button class="btn icon" @click="form.fieldTimelines.splice(ti, 1)">✕</button>
+        </div>
+        <div v-for="(v, vi) in tf.values" :key="vi" class="ce-row ce-timeline-val">
+          <input v-model="v.value" placeholder="17" class="ce-key" />
+          <select v-model="v.book" class="ce-book">
+            <option value="">from the start</option>
+            <option v-for="b in books" :key="b.id" :value="b.id">{{ b.title }}</option>
+          </select>
+          <select v-if="v.book" v-model="v.chapter" class="ce-book">
+            <option value="">start of book</option>
+            <option v-for="c in chaptersOf(v.book)" :key="c" :value="c">{{ c }}</option>
+          </select>
+          <button class="btn icon" @click="tf.values.splice(vi, 1)">✕</button>
+        </div>
+        <button class="btn mini" @click="addTimelineValue(tf)">+ Add value</button>
       </div>
     </section>
 
@@ -591,6 +665,19 @@ section {
   border-radius: 8px;
   padding: 8px 10px 4px;
   margin-bottom: 8px;
+}
+.ce-timeline {
+  border: 1px solid var(--nv-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+.ce-timeline-val {
+  margin-left: 18px;
+}
+.btn.mini {
+  padding: 2px 9px;
+  font-size: 11px;
 }
 .ce-rel-time {
   margin-bottom: 2px;

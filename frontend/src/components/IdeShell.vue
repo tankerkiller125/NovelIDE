@@ -14,7 +14,7 @@ import CorkboardView from './CorkboardView.vue'
 import TimelineView from './TimelineView.vue'
 import SearchView from './SearchView.vue'
 import HistoryView from './HistoryView.vue'
-import { SaveCodexEntry } from '../api'
+import { DismissSuggestion, SaveCodexEntry } from '../api'
 import {
   activateTab,
   activeTabObj,
@@ -164,7 +164,9 @@ async function acceptSuggestion(s: Suggestion) {
 }
 
 function dismissSuggestion(s: Suggestion) {
-  state.dismissedSuggestions.add(s.key)
+  state.dismissedSuggestions.add(s.key) // hide immediately
+  // Persist so it stays dismissed across sessions (and syncs to other devices).
+  void DismissSuggestion(s.key).catch((e) => console.error('persist dismissal failed', e))
 }
 
 function jumpToFlag(pos: number) {

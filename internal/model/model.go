@@ -99,6 +99,14 @@ type StatusChange struct {
 	Note  string     `yaml:"note,omitempty" json:"note,omitempty"`
 }
 
+// TimedValue is one value of a timelined field, taking effect at a story point
+// (empty At = from the beginning) and lasting until the next value.
+type TimedValue struct {
+	Value string      `yaml:"value" json:"value"`
+	At    *StoryPoint `yaml:"at,omitempty" json:"at,omitempty"`
+	Note  string      `yaml:"note,omitempty" json:"note,omitempty"`
+}
+
 // CodexEntry is one entity in the codex, stored as a YAML file. Type is a
 // type id from the workspace schema; entries live under codex/<type>/.
 type CodexEntry struct {
@@ -110,10 +118,16 @@ type CodexEntry struct {
 	Details string   `yaml:"details,omitempty" json:"details"` // markdown body
 	// Image is a workspace-relative path to a portrait/map (e.g.
 	// "assets/aria-voss.png"), copied into the workspace when set.
-	Image     string            `yaml:"image,omitempty" json:"image"`
-	Fields    map[string]string `yaml:"fields,omitempty" json:"fields"`
-	Status    []StatusChange    `yaml:"status,omitempty" json:"status"`
-	Relations []Relation        `yaml:"relations,omitempty" json:"relations"`
+	Image  string            `yaml:"image,omitempty" json:"image"`
+	Fields map[string]string `yaml:"fields,omitempty" json:"fields"`
+	// FieldTimelines holds facts that change over story time — e.g. a
+	// character's age across books. Each key maps to values anchored to story
+	// points; the value in effect at a given chapter is the most recent one
+	// anchored at or before it (empty anchor = "from the start"). Static facts
+	// stay in Fields; this is purely opt-in.
+	FieldTimelines map[string][]TimedValue `yaml:"fieldTimelines,omitempty" json:"fieldTimelines,omitempty"`
+	Status         []StatusChange          `yaml:"status,omitempty" json:"status"`
+	Relations      []Relation              `yaml:"relations,omitempty" json:"relations"`
 
 	// Scope is derived from where the file lives, not stored in YAML.
 	// "series" for workspace-level codex/, otherwise the book ID.
@@ -138,4 +152,8 @@ type Workspace struct {
 	Books      []Book       `json:"books"`
 	Codex      []CodexEntry `json:"codex"`
 	SeriesPlan SeriesPlan   `json:"seriesPlan"`
+	// Dismissed lists the keys of codex-gap suggestions the author has waved
+	// away, so they don't keep reappearing. Stored in the workspace (and thus
+	// synced), not in local-only session state.
+	Dismissed []string `json:"dismissed"`
 }

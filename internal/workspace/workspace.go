@@ -110,6 +110,7 @@ func Load(path string) (*model.Workspace, error) {
 		}
 		ws.Codex = append(ws.Codex, bookEntries...)
 	}
+	ws.Dismissed = LoadDismissed(path)
 	return ws, nil
 }
 

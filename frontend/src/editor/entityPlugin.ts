@@ -245,7 +245,8 @@ function renderCard(ctx: EntityHoverContext, entryId: string, flags: Flag[]): HT
     sum.textContent = entry.summary
   }
   const fields = Object.entries(entry.fields ?? {})
-  if (fields.length) {
+  const timelined = (data?.timelinedFields ?? []).filter((f) => f.value !== '')
+  if (fields.length || timelined.length) {
     const dl = card.appendChild(document.createElement('div'))
     dl.className = 'nv-card-fields'
     for (const [k, v] of fields.slice(0, 6)) {
@@ -255,6 +256,19 @@ function renderCard(ctx: EntityHoverContext, entryId: string, flags: Flag[]): HT
       key.className = 'nv-card-field-key'
       key.textContent = k
       row.appendChild(document.createTextNode(v))
+    }
+    // Timelined facts, resolved to their value at this point in the story.
+    for (const f of timelined.slice(0, 6)) {
+      const row = dl.appendChild(document.createElement('div'))
+      row.className = 'nv-card-field'
+      const key = row.appendChild(document.createElement('span'))
+      key.className = 'nv-card-field-key'
+      key.textContent = f.key
+      row.appendChild(document.createTextNode(f.value))
+      const clock = row.appendChild(document.createElement('span'))
+      clock.className = 'nv-card-field-clock'
+      clock.textContent = ' 🕐'
+      clock.title = `as of ${f.anchor}`
     }
   }
 
@@ -278,10 +292,12 @@ function renderCard(ctx: EntityHoverContext, entryId: string, flags: Flag[]): HT
   }
 
   // Everything time-filtered away lives behind "Show more": the full status
-  // timeline and past/future relationships. Beware of spoiling yourself.
+  // timeline, field histories, and past/future relationships. Beware of
+  // spoiling yourself.
   const hiddenStatus = (data?.statusTimeline ?? []).length
   const hiddenRels = data?.inactiveRelations ?? []
-  if (hiddenStatus > 0 || hiddenRels.length > 0) {
+  const fieldHistories = (data?.timelinedFields ?? []).filter((f) => f.history.length > 1)
+  if (hiddenStatus > 0 || hiddenRels.length > 0 || fieldHistories.length > 0) {
     const moreWrap = card.appendChild(document.createElement('div'))
     moreWrap.className = 'nv-card-more'
     moreWrap.style.display = 'none'
@@ -290,6 +306,16 @@ function renderCard(ctx: EntityHoverContext, entryId: string, flags: Flag[]): HT
       h.className = 'nv-card-more-head'
       h.textContent = 'Full timeline'
       for (const s of data!.statusTimeline) statusRow(moreWrap, s)
+    }
+    for (const f of fieldHistories) {
+      const h = moreWrap.appendChild(document.createElement('div'))
+      h.className = 'nv-card-more-head'
+      h.textContent = f.key
+      for (const v of f.history) {
+        const row = moreWrap.appendChild(document.createElement('div'))
+        row.className = 'nv-card-status-line' + (v.current ? ' current' : '')
+        row.appendChild(document.createTextNode(`${v.value} — ${v.anchor}`))
+      }
     }
     if (hiddenRels.length > 0) {
       const h = moreWrap.appendChild(document.createElement('div'))

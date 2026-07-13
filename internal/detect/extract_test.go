@@ -41,6 +41,50 @@ func suggestionKeys(ss []Suggestion) map[string]bool {
 	return out
 }
 
+func timelineAgeWorkspace(vals []model.TimedValue) *model.Workspace {
+	return &model.Workspace{
+		Manifest: model.Manifest{Books: []string{"book-one"}},
+		Books:    []model.Book{{ID: "book-one", Chapters: []string{"01.md"}}},
+		Schema:   model.DefaultSchema(),
+		Codex: []model.CodexEntry{
+			{ID: "aria", Name: "Aria", Type: "character",
+				FieldTimelines: map[string][]model.TimedValue{"age": vals}},
+		},
+	}
+}
+
+func TestTimelinedFieldNotResuggested(t *testing.T) {
+	// Age already tracked on a timeline → the manuscript stating it must NOT
+	// re-suggest saving it as a static fact.
+	ws := timelineAgeWorkspace([]model.TimedValue{{Value: "seven"}})
+	ss, flags := extract(ws, "Aria was seven years old.")
+	for _, s := range ss {
+		if s.FieldKey == "age" {
+			t.Errorf("age on a timeline was re-suggested: %+v", s)
+		}
+	}
+	for _, f := range flags {
+		if f.Rule == "field-contradiction" {
+			t.Errorf("matching timelined age wrongly flagged: %+v", f)
+		}
+	}
+}
+
+func TestTimelinedFieldContradiction(t *testing.T) {
+	// A timelined value that disagrees with the prose at this point still flags.
+	ws := timelineAgeWorkspace([]model.TimedValue{{Value: "ten"}})
+	_, flags := extract(ws, "Aria was seven years old.")
+	found := false
+	for _, f := range flags {
+		if f.Rule == "field-contradiction" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected a contradiction between the timelined age and the prose")
+	}
+}
+
 func TestAppearancePossessive(t *testing.T) {
 	ws := extractWorkspace()
 	ss, _ := extract(ws, "Aria's hair was copper-red.")

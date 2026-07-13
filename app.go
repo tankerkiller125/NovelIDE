@@ -354,6 +354,27 @@ func (a *App) ReadImageDataURL(rel string) (string, error) {
 	return "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(b), nil
 }
 
+// DismissSuggestion records a codex-gap suggestion as dismissed so it stops
+// reappearing. The dismissal is stored in the workspace (and thus synced).
+func (a *App) DismissSuggestion(key string) error {
+	path, err := a.workspacePath()
+	if err != nil {
+		return err
+	}
+	_, err = workspace.AddDismissed(path, key)
+	return err
+}
+
+// RestoreSuggestion un-dismisses a suggestion key.
+func (a *App) RestoreSuggestion(key string) error {
+	path, err := a.workspacePath()
+	if err != nil {
+		return err
+	}
+	_, err = workspace.RemoveDismissed(path, key)
+	return err
+}
+
 // ReadChapter returns a chapter's markdown content.
 func (a *App) ReadChapter(bookID, chapter string) (string, error) {
 	path, err := a.workspacePath()

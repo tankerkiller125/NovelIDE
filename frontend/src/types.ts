@@ -219,10 +219,19 @@ export interface CodexEntry {
   /** workspace-relative image path, or "" */
   image: string
   fields: Record<string, string> | null
+  /** facts that change over story time (e.g. age), keyed by field name */
+  fieldTimelines?: Record<string, TimedValue[]> | null
   status: StatusChange[] | null
   relations: Relation[] | null
   /** 'series' or a book id */
   scope: string
+}
+
+/** One value of a timelined field, effective from `at` (empty = from the start). */
+export interface TimedValue {
+  value: string
+  at?: StoryPoint
+  note?: string
 }
 
 export interface Workspace {
@@ -232,6 +241,8 @@ export interface Workspace {
   books: Book[] | null
   codex: CodexEntry[] | null
   seriesPlan: SeriesPlan
+  /** keys of dismissed codex-gap suggestions (persisted + synced) */
+  dismissed: string[] | null
 }
 
 export interface Span {
@@ -387,4 +398,14 @@ export interface CardData {
   inactiveRelations: RelationDisplay[]
   /** the full status timeline, for the expanded view */
   statusTimeline: CardStatusLine[]
+  /** timelined facts resolved to their value at this point in the story */
+  timelinedFields: TimelinedFieldNow[]
+}
+
+/** A timelined field's value at the current reading position, plus its history. */
+export interface TimelinedFieldNow {
+  key: string
+  value: string
+  anchor: string
+  history: { value: string; anchor: string; current: boolean }[]
 }

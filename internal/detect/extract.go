@@ -94,10 +94,13 @@ func Extract(ws *model.Workspace, bookID, chapter string, spans []match.Span, do
 		return nil, nil
 	}
 	x := &extractor{
-		ws:   ws,
-		doc:  doc,
-		byID: map[string]*model.CodexEntry{},
-		seen: map[string]bool{},
+		ws:      ws,
+		doc:     doc,
+		bookID:  bookID,
+		chapter: chapter,
+		tl:      NewTimeline(ws),
+		byID:    map[string]*model.CodexEntry{},
+		seen:    map[string]bool{},
 	}
 	for i := range ws.Codex {
 		x.byID[ws.Codex[i].ID] = &ws.Codex[i]
@@ -113,6 +116,9 @@ func Extract(ws *model.Workspace, bookID, chapter string, spans []match.Span, do
 type extractor struct {
 	ws      *model.Workspace
 	doc     *nlp.Doc
+	bookID  string
+	chapter string
+	tl      *Timeline
 	byID    map[string]*model.CodexEntry
 	relDefs []model.RelationDef
 	spans   []match.Span
@@ -160,7 +166,7 @@ func (x *extractor) hasRelation(e *model.CodexEntry, relType, to string) bool {
 	return false
 }
 
-// fieldValue does a case-insensitive lookup in an entry's fields.
+// fieldValue does a case-insensitive lookup in an entry's static fields.
 func fieldValue(e *model.CodexEntry, key string) string {
 	for k, v := range e.Fields {
 		if strings.EqualFold(k, key) {
@@ -168,6 +174,23 @@ func fieldValue(e *model.CodexEntry, key string) string {
 		}
 	}
 	return ""
+}
+
+// recordedField reports whether the entry already records key — as a static
+// fact or a timelined one — and, when known, the value in effect at the current
+// chapter. This stops the engine re-suggesting a fact the author has already
+// captured on a timeline (e.g. a changing age). A timelined key with no value
+// applying yet at this point counts as present with an empty value.
+func (x *extractor) recordedField(e *model.CodexEntry, key string) (value string, present bool) {
+	if v := fieldValue(e, key); v != "" {
+		return v, true
+	}
+	for k, tl := range e.FieldTimelines {
+		if strings.EqualFold(k, key) {
+			return x.tl.valueAt(tl, x.bookID, x.chapter), true
+		}
+	}
+	return "", false
 }
 
 // compatible avoids flagging "copper-red" against "copper": one value
@@ -183,8 +206,8 @@ func (x *extractor) observeField(e *model.CodexEntry, key, value string, sp matc
 	if value == "" {
 		return
 	}
-	existing := fieldValue(e, key)
-	if existing == "" {
+	existing, present := x.recordedField(e, key)
+	if !present {
 		x.add(Suggestion{
 			Kind: "field", EntryID: e.ID, FieldKey: key, FieldValue: value,
 			Start: sp.Start, End: sp.End,
@@ -193,7 +216,10 @@ func (x *extractor) observeField(e *model.CodexEntry, key, value string, sp matc
 		})
 		return
 	}
-	if !compatible(existing, value) {
+	// Already recorded (static or timelined). Only flag a genuine contradiction
+	// against a known current value — a timelined key with no value applying at
+	// this point yet has nothing to contradict.
+	if existing != "" && !compatible(existing, value) {
 		x.flags = append(x.flags, Flag{
 			EntryID: e.ID, Start: sp.Start, End: sp.End,
 			Severity: SevWarning, Rule: "field-contradiction",
@@ -326,8 +352,11 @@ func (x *extractor) genderPass(toks []nlp.Token, chars []match.Span, scope *mode
 func (x *extractor) genderSuggestions() {
 	for id, v := range x.genderVotes {
 		e := x.byID[id]
-		if e == nil || fieldValue(e, "gender") != "" {
+		if e == nil {
 			continue
+		}
+		if _, present := x.recordedField(e, "gender"); present {
+			continue // already recorded, statically or on a timeline
 		}
 		total := v[0] + v[1]
 		if total < 3 {

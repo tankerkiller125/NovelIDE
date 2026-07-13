@@ -130,6 +130,10 @@ export const RecordWritingProgress = (): Promise<WritingStats> => app().RecordWr
 
 export const SetDailyGoal = (goal: number): Promise<WritingStats> => app().SetDailyGoal(goal)
 
+export const DismissSuggestion = (key: string): Promise<void> => app().DismissSuggestion(key)
+
+export const RestoreSuggestion = (key: string): Promise<void> => app().RestoreSuggestion(key)
+
 // --- optional sync ---
 export const SyncStatusGet = (): Promise<SyncStatus> => app().SyncStatus()
 

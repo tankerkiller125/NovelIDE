@@ -69,6 +69,35 @@ func TestMentionOfDeadCharacterIsInfoOnly(t *testing.T) {
 	}
 }
 
+func TestDeadBodyPostureIsNotAgency(t *testing.T) {
+	ws := testWorkspace()
+	// A corpse can lie, sit, or rest somewhere — postural verbs describe a
+	// state, not an action, so they must not be flagged as the dead acting.
+	for _, text := range []string{
+		"They found the spot where Aria lay.",
+		"Aria lay still among the reeds.",
+		"Aria lay dead on the stones.",
+		"The body of Aria rested against the wall.",
+		"Aria sat slumped where she had fallen.",
+	} {
+		flags := scanAndCheck(ws, "book-one", "03-after.md", text)
+		for _, f := range flags {
+			if f.Severity == SevError {
+				t.Errorf("%q wrongly flagged as agency: %+v", text, f)
+			}
+		}
+	}
+}
+
+func TestDeadCharacterDeliberateMotionStillFlags(t *testing.T) {
+	ws := testWorkspace()
+	// "lay down" / "sat up" are deliberate movements a corpse can't make.
+	flags := scanAndCheck(ws, "book-one", "03-after.md", "Aria sat up and looked around.")
+	if len(flags) == 0 {
+		t.Error("a dead character deliberately sitting up should still flag")
+	}
+}
+
 func TestNoFlagBeforeDeath(t *testing.T) {
 	ws := testWorkspace()
 	if flags := scanAndCheck(ws, "book-one", "01-start.md", "Aria walked in."); len(flags) != 0 {
