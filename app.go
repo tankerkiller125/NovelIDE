@@ -30,6 +30,7 @@ import (
 	"novelide/internal/stats"
 	"novelide/internal/syncclient"
 	"novelide/internal/syncproto"
+	"novelide/internal/watch"
 	"novelide/internal/workspace"
 )
 
@@ -43,6 +44,11 @@ type App struct {
 	settings settings.Settings
 	deep     *deep.Engine
 	spell    *spell.Engine
+
+	// Filesystem watcher for the open workspace, so external edits (other
+	// tools, sync, AI agents) are picked up. Guarded by mu.
+	watcher     *watch.Watcher
+	watchedPath string
 }
 
 func NewApp() *App {
@@ -124,9 +130,48 @@ func (a *App) AddToDictionary(word string) error {
 // welcome screen.
 func (a *App) CloseWorkspace() {
 	a.mu.Lock()
-	defer a.mu.Unlock()
 	a.ws = nil
 	a.matcher = nil
+	old := a.watcher
+	a.watcher = nil
+	a.watchedPath = ""
+	a.mu.Unlock()
+	if old != nil {
+		old.Stop()
+	}
+}
+
+// watchWorkspace (re)starts the filesystem watcher for path, unless it's
+// already watching it. External changes are emitted to the frontend as the
+// "fs:changed" event.
+func (a *App) watchWorkspace(path string) {
+	a.mu.Lock()
+	if a.watchedPath == path && a.watcher != nil {
+		a.mu.Unlock()
+		return
+	}
+	old := a.watcher
+	a.watchedPath = path
+	a.mu.Unlock()
+	if old != nil {
+		old.Stop()
+	}
+
+	w := watch.Start(path, 1500*time.Millisecond, func(ch watch.Change) {
+		if a.ctx != nil {
+			runtime.EventsEmit(a.ctx, "fs:changed", ch)
+		}
+	})
+
+	a.mu.Lock()
+	// If the workspace changed again while we were starting, discard this one.
+	if a.watchedPath == path {
+		a.watcher = w
+		a.mu.Unlock()
+	} else {
+		a.mu.Unlock()
+		w.Stop()
+	}
 }
 
 // ScanResult bundles entity mentions, consistency flags, codex-gap
@@ -140,10 +185,12 @@ type ScanResult struct {
 
 func (a *App) setWorkspace(ws *model.Workspace) *model.Workspace {
 	a.mu.Lock()
-	defer a.mu.Unlock()
 	a.ws = ws
 	a.matcher = match.New(ws.Codex)
 	settings.Touch(&a.settings, ws.Path)
+	a.mu.Unlock()
+	// Watch the workspace for external changes (no-op if already watching it).
+	a.watchWorkspace(ws.Path)
 	return ws
 }
 

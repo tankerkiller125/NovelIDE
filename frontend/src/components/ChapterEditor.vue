@@ -27,6 +27,13 @@ const view = shallowRef<EditorView | null>(null)
 const loading = ref(true)
 const error = ref('')
 
+// The content we last read from / wrote to disk, used to tell our own saves
+// apart from external edits when the file changes on disk.
+const lastSaved = ref('')
+// Set when an external change hits a chapter with unsaved edits.
+const diskConflict = ref(false)
+const conflictDisk = ref('')
+
 // ---- Creature-comfort settings, all live-applying ----
 // Width, font, size, and spacing bind straight into the scoped CSS via
 // v-bind; the gutter and spellchecker reconfigure through a CodeMirror
@@ -112,8 +119,10 @@ async function runScan(v: EditorView) {
 }
 
 async function save(v: EditorView) {
+  const content = v.state.doc.toString()
   try {
-    await SaveChapter(props.bookId, props.chapter, v.state.doc.toString())
+    await SaveChapter(props.bookId, props.chapter, content)
+    lastSaved.value = content
     state.dirtyChapters.delete(dirtyKey())
     state.statsTick++ // nudge the writing-stats bar to refresh
   } catch (e) {
@@ -219,6 +228,8 @@ async function setup() {
     loading.value = false
     return
   }
+  lastSaved.value = content
+  diskConflict.value = false
   if (destroyed || !host.value) return
   const v = new EditorView({
     parent: host.value,
@@ -298,6 +309,60 @@ function applyPendingJump() {
 // React to a jump requested while this chapter is already open.
 watch(() => state.pendingJump, applyPendingJump)
 
+// This chapter's path relative to the workspace, matching the watcher's output.
+const chapterRel = computed(() => `books/${props.bookId}/manuscript/${props.chapter}`)
+
+/** When this chapter changed on disk (external edit), reconcile the buffer. */
+async function reconcileFromDisk() {
+  const v = view.value
+  if (!v) return
+  let disk: string
+  try {
+    disk = await ReadChapter(props.bookId, props.chapter)
+  } catch {
+    return // e.g. the chapter was removed; the tab will be reconciled away
+  }
+  const buf = v.state.doc.toString()
+  if (disk === buf) return // already in sync
+  if (disk === lastSaved.value) return // our own save; buffer may hold newer edits
+  if (!state.dirtyChapters.has(dirtyKey())) {
+    adoptDisk(disk) // no local edits at risk — just take the new version
+  } else {
+    conflictDisk.value = disk // unsaved edits: let the author choose
+    diskConflict.value = true
+  }
+}
+
+/** Replace the buffer with the on-disk version, keeping the cursor in range. */
+function adoptDisk(disk: string) {
+  const v = view.value
+  if (!v) return
+  const sel = v.state.selection.main
+  const clamp = (n: number) => Math.min(n, disk.length)
+  v.dispatch({
+    changes: { from: 0, to: v.state.doc.length, insert: disk },
+    selection: { anchor: clamp(sel.anchor), head: clamp(sel.head) },
+  })
+  lastSaved.value = disk
+  state.dirtyChapters.delete(dirtyKey())
+  diskConflict.value = false
+  runScan(v)
+}
+
+function keepMine() {
+  // Keep the buffer; the next save overwrites disk. The banner clears; the
+  // same external change won't re-prompt (the watcher only fires on new edits).
+  diskConflict.value = false
+}
+
+// React when the file watcher reports this chapter changed on disk.
+watch(
+  () => state.externalChange.seq,
+  () => {
+    if (state.externalChange.modified.includes(chapterRel.value)) void reconcileFromDisk()
+  },
+)
+
 /** Run the optional Cybertron pass and merge its suggestions. */
 async function deepScan(): Promise<void> {
   const v = view.value
@@ -331,6 +396,11 @@ onBeforeUnmount(() => {
 <template>
   <div class="editor-wrap">
     <div v-if="error" class="editor-error">{{ error }}</div>
+    <div v-if="diskConflict" class="disk-conflict">
+      <span>This chapter changed on disk while you had unsaved edits.</span>
+      <button class="btn mini" @click="adoptDisk(conflictDisk)">Load disk version</button>
+      <button class="btn mini" @click="keepMine">Keep mine</button>
+    </div>
     <div v-if="!state.focusMode" class="fmt-toolbar">
       <button class="fmt-btn" title="Bold (Ctrl+B)" @click="fmtWrap('**')"><b>B</b></button>
       <button class="fmt-btn" title="Italic (Ctrl+I)" @click="fmtWrap('*')"><i>I</i></button>
@@ -390,6 +460,23 @@ onBeforeUnmount(() => {
   padding: 8px 12px;
   color: var(--nv-error);
   background: color-mix(in srgb, var(--nv-error) 12%, transparent);
+}
+.disk-conflict {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--nv-text);
+  background: color-mix(in srgb, var(--nv-warning) 18%, transparent);
+  border-bottom: 1px solid var(--nv-border);
+}
+.disk-conflict span {
+  flex: 1;
+}
+.disk-conflict .btn.mini {
+  padding: 2px 9px;
+  font-size: 11px;
 }
 .fmt-toolbar {
   display: flex;

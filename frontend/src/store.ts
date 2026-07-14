@@ -1,7 +1,7 @@
 // Central reactive state for the IDE, shared via composables (no Pinia
 // needed at this size).
 import { computed, reactive } from 'vue'
-import { ReadImageDataURL, SyncLinkPull, SyncNow, SyncStatusGet } from './api'
+import { OpenWorkspace, ReadImageDataURL, SyncLinkPull, SyncNow, SyncStatusGet } from './api'
 import type { SyncOutcome } from './types'
 import type {
   CardData,
@@ -139,6 +139,9 @@ interface State {
   reloadTick: number
   /** optional-sync status (null until first fetched) */
   sync: SyncStatus | null
+  /** most recent batch of external filesystem changes; seq bumps each time so
+   *  the open editor can react */
+  externalChange: { modified: string[]; structural: string[]; seq: number }
 }
 
 export const state = reactive<State>({
@@ -155,6 +158,7 @@ export const state = reactive<State>({
   pendingJump: null,
   reloadTick: 0,
   sync: null,
+  externalChange: { modified: [], structural: [], seq: 0 },
 })
 
 export const codexById = computed(() => {
@@ -457,6 +461,26 @@ export function openChapterAtLine(bookId: string, chapter: string, line: number)
   const tab: Tab = { kind: 'chapter', bookId, chapter }
   openTab(tab)
   pinTab(tabKey(tab))
+}
+
+/**
+ * Handle a batch of external filesystem changes (from the fs:changed event).
+ * Reloads workspace metadata when the structure or a codex/plan/schema file
+ * changed, and signals the open chapter editor to reconcile any changed
+ * manuscript file it holds.
+ */
+export async function handleExternalChange(modified: string[], structural: string[]) {
+  state.externalChange = { modified, structural, seq: state.externalChange.seq + 1 }
+  const yamlChanged = [...modified, ...structural].some(
+    (p) => p.endsWith('.yaml') || p.endsWith('.yml'),
+  )
+  if ((structural.length > 0 || yamlChanged) && state.workspace) {
+    try {
+      setWorkspace(await OpenWorkspace(state.workspace.path))
+    } catch (e) {
+      console.error('reload after external change failed', e)
+    }
+  }
 }
 
 /** Refresh the optional-sync status (safe no-op if unconfigured). */
