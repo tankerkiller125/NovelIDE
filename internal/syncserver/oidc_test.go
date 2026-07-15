@@ -169,8 +169,11 @@ func TestSSOStartRejectsNonLoopback(t *testing.T) {
 }
 
 func ssoServerBothPasswordWorks(t *testing.T, ts *httptest.Server) bool {
-	r, _ := http.Post(ts.URL+"/api/register", "application/json",
+	r, err := http.Post(ts.URL+"/api/register", "application/json",
 		strings.NewReader(`{"username":"bob","password":"password12"}`))
+	if err != nil {
+		t.Fatalf("register request failed: %v", err)
+	}
 	defer r.Body.Close()
 	return r.StatusCode == http.StatusOK
 }
