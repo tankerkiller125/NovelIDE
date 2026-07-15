@@ -25,6 +25,7 @@ import (
 	"novelide/internal/match"
 	"novelide/internal/model"
 	"novelide/internal/nlp"
+	"novelide/internal/secrets"
 	"novelide/internal/settings"
 	"novelide/internal/spell"
 	"novelide/internal/spellcheck"
@@ -93,6 +94,13 @@ func (a *App) GetAIConfig() ai.Config {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return a.settings.AI
+}
+
+// SecretStorageSecure reports whether secrets (API keys, sync token) are stored
+// in the OS credential store rather than the settings file, so the UI can be
+// honest about where a key lives.
+func (a *App) SecretStorageSecure() bool {
+	return secrets.Available()
 }
 
 // SaveAIConfig persists the AI configuration (providers + per-mode models).

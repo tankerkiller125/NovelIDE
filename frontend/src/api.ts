@@ -44,6 +44,8 @@ export const AppVersion = (): Promise<string> => app().AppVersion()
 // --- optional AI config ---
 export const GetAIConfig = (): Promise<AIConfig> => app().GetAIConfig()
 
+export const SecretStorageSecure = (): Promise<boolean> => app().SecretStorageSecure()
+
 export const SaveAIConfig = (cfg: AIConfig): Promise<AIConfig> => app().SaveAIConfig(cfg)
 
 export const TestAIConnection = (provider: AINamedProvider, model: string): Promise<string> =>

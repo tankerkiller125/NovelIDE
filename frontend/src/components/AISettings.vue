@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { GetAIConfig, SaveAIConfig, TestAIConnection } from '../api'
+import { GetAIConfig, SaveAIConfig, SecretStorageSecure, TestAIConnection } from '../api'
 import { state } from '../store'
 import type { AIConfig, AIModeConfig, AINamedProvider, AIProviderKind } from '../types'
 
@@ -10,6 +10,7 @@ const message = ref('')
 const error = ref('')
 const testing = ref<'assistant' | 'planning' | ''>('')
 const testResult = ref<{ mode: string; ok: boolean; text: string } | null>(null)
+const secureStorage = ref(true)
 
 const DEFAULT_URL: Record<AIProviderKind, string> = {
   openai: 'https://api.openai.com/v1',
@@ -27,6 +28,7 @@ onMounted(async () => {
   try {
     const c = await GetAIConfig()
     cfg.value = { ...c, providers: c.providers ?? [] }
+    secureStorage.value = await SecretStorageSecure()
   } catch (e) {
     error.value = String(e)
   }
@@ -117,6 +119,11 @@ async function test(mode: 'assistant' | 'planning') {
         <h4>Providers</h4>
         <button class="btn mini" @click="addProvider">+ Add provider</button>
       </div>
+      <p class="hint ai-keynote">
+        <template v-if="secureStorage">🔒 API keys are stored in your operating system's keychain, not in the settings file.</template>
+        <template v-else>⚠ No system keychain was found, so API keys are kept in your settings file (readable only by
+          your user account). Install/enable a secret service — GNOME Keyring or KWallet — for encrypted storage.</template>
+      </p>
       <p v-if="!(cfg.providers && cfg.providers.length)" class="hint">
         No providers yet. Add one to get started.
       </p>
@@ -231,6 +238,9 @@ async function test(mode: 'assistant' | 'planning') {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--nv-faint);
+}
+.ai-keynote {
+  margin: 2px 0 6px;
 }
 .ai-provider {
   border: 1px solid var(--nv-border);

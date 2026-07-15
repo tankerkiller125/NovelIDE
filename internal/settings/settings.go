@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"novelide/internal/ai"
+	"novelide/internal/secrets"
 )
 
 // Settings are the user's application preferences.
@@ -50,8 +51,9 @@ type Settings struct {
 	SyncAccountID string `json:"syncAccountId"`
 
 	// AI holds the optional AI configuration (providers + per-mode models).
-	// Empty/disabled by default. API keys live here in plaintext, like the
-	// sync token — same local-config trust model.
+	// Empty/disabled by default. Provider API keys and the sync token are moved
+	// to the OS credential store on save (see internal/secrets) and are blank in
+	// this file whenever secure storage is available.
 	AI ai.Config `json:"ai"`
 
 	// Recent lists recently opened workspace paths, most recent first.
@@ -131,7 +133,14 @@ func Sanitize(s Settings) Settings {
 	return s
 }
 
-// Load reads settings from disk, returning defaults if none exist yet.
+const syncSecretID = "sync-token"
+
+func providerSecretID(id string) string { return "ai-provider:" + id }
+
+// Load reads settings from disk, returning defaults if none exist yet. Secrets
+// are restored from the OS credential store; any that are still in the file
+// (a fresh upgrade, or a config written without secure storage) are migrated
+// into the store on the spot so the plaintext doesn't linger.
 func Load() Settings {
 	s := Defaults()
 	p, err := configPath()
@@ -143,10 +152,37 @@ func Load() Settings {
 		return s
 	}
 	_ = json.Unmarshal(b, &s)
-	return Sanitize(s)
+	s = Sanitize(s)
+
+	if secrets.Available() {
+		plaintext := false
+		if s.SyncToken == "" {
+			if v, _ := secrets.Get(syncSecretID); v != "" {
+				s.SyncToken = v
+			}
+		} else {
+			plaintext = true
+		}
+		for i := range s.AI.Providers {
+			pr := &s.AI.Providers[i]
+			if pr.APIKey == "" {
+				if v, _ := secrets.Get(providerSecretID(pr.ID)); v != "" {
+					pr.APIKey = v
+				}
+			} else {
+				plaintext = true
+			}
+		}
+		if plaintext {
+			_ = Save(s) // moves the keys into the store and rewrites the file without them
+		}
+	}
+	return s
 }
 
-// Save writes settings to disk.
+// Save writes settings to disk. When secure storage is available, provider API
+// keys and the sync token are written to the OS credential store and blanked in
+// the file; otherwise they stay in the file, which is always owner-only (0600).
 func Save(s Settings) error {
 	p, err := configPath()
 	if err != nil {
@@ -155,11 +191,59 @@ func Save(s Settings) error {
 	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 		return err
 	}
-	b, err := json.MarshalIndent(s, "", "  ")
+
+	persist := s
+	if secrets.Available() {
+		// Remove secrets for providers that no longer exist.
+		keep := map[string]bool{}
+		for _, pr := range s.AI.Providers {
+			keep[pr.ID] = true
+		}
+		for _, id := range fileProviderIDs(p) {
+			if !keep[id] {
+				_ = secrets.Delete(providerSecretID(id))
+			}
+		}
+		// Store the sync token, then a blanked copy of the providers.
+		_ = secrets.Set(syncSecretID, s.SyncToken)
+		persist.SyncToken = ""
+		persist.AI.Providers = make([]ai.NamedProvider, len(s.AI.Providers))
+		copy(persist.AI.Providers, s.AI.Providers)
+		for i := range persist.AI.Providers {
+			pr := &persist.AI.Providers[i]
+			_ = secrets.Set(providerSecretID(pr.ID), pr.APIKey)
+			pr.APIKey = ""
+		}
+	}
+
+	b, err := json.MarshalIndent(persist, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(p, b, 0o644)
+	if err := os.WriteFile(p, b, 0o600); err != nil {
+		return err
+	}
+	// WriteFile keeps an existing file's mode, so enforce owner-only explicitly.
+	_ = os.Chmod(p, 0o600)
+	return nil
+}
+
+// fileProviderIDs returns the provider ids currently persisted in the file
+// (best-effort), used to clean up secrets for providers that were removed.
+func fileProviderIDs(path string) []string {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+	var s Settings
+	if json.Unmarshal(b, &s) != nil {
+		return nil
+	}
+	ids := make([]string, 0, len(s.AI.Providers))
+	for _, pr := range s.AI.Providers {
+		ids = append(ids, pr.ID)
+	}
+	return ids
 }
 
 // Touch records a workspace path as most-recently-used and persists.

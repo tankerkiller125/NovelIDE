@@ -163,8 +163,11 @@ manuscript anywhere, ever, or trains anything.
   and Codex or plan changes appear as cards you Apply or Discard. It can also
   *read* your Codex and manuscript (to stay grounded) but cannot change anything
   without your click.
-- **Your API key is stored in plain text** in your local settings file (like the
-  optional sync token), so protect that file as you would any credential.
+- **Your API key is kept in your OS credential store** — Keychain on macOS,
+  Credential Manager on Windows, the Secret Service (GNOME Keyring / KWallet) on
+  Linux — not in the settings file. On the rare system with no credential store,
+  it falls back to the settings file, which is owner-only (0600); Settings tells
+  you which is in effect.
 
 **How NovelIDE itself was made.** This application was developed with substantial
 help from an AI coding assistant, and its bundled example world (the "Saltglass
