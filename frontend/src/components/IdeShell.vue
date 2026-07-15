@@ -14,6 +14,7 @@ import CorkboardView from './CorkboardView.vue'
 import TimelineView from './TimelineView.vue'
 import SearchView from './SearchView.vue'
 import HistoryView from './HistoryView.vue'
+import AIPanel from './AIPanel.vue'
 import { DismissSuggestion, SaveCodexEntry } from '../api'
 import {
   activateTab,
@@ -322,6 +323,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
       <StatusBar />
     </main>
+    <AIPanel v-show="state.aiPanelOpen" />
   </div>
 </template>
 

@@ -89,6 +89,56 @@ export interface AuthConfig {
   ssoName?: string
 }
 
+// --- optional AI configuration ---
+export type AIProviderKind = 'openai' | 'anthropic'
+
+export interface AINamedProvider {
+  id: string
+  name: string
+  kind: AIProviderKind
+  baseUrl: string
+  apiKey: string
+  /** Disable SSE streaming (send stream:false). For gateways whose streaming is
+   *  broken — e.g. Cloudflare's OpenAI-compat endpoint serving Claude. */
+  noStream?: boolean
+}
+
+export interface AIModeConfig {
+  providerId: string
+  model: string
+  contextTokens: number
+  maxOutputTokens: number
+  temperature: number
+}
+
+export interface AIConfig {
+  enabled: boolean
+  providers: AINamedProvider[] | null
+  assistant: AIModeConfig
+  planning: AIModeConfig
+}
+
+/** One chat turn sent to the AI runtime. */
+export interface AIMessage {
+  role: 'user' | 'assistant'
+  content: string
+  /** Tools the assistant invoked this turn (UI-only; ignored by the backend). */
+  tools?: string[]
+}
+
+/** An AI-proposed edit awaiting the author's approval. */
+export interface AIProposal {
+  id: string
+  kind: 'codex' | 'plan' | 'prose'
+  summary: string
+  target: string
+  before?: string
+  after?: string
+  /** prose only: the chapter this edit targets, so the editor can anchor it. */
+  bookId?: string
+  chapter?: string
+}
+
 /** Sync configuration/state reported by the backend. */
 export interface SyncStatus {
   configured: boolean
@@ -355,6 +405,8 @@ export interface Settings {
   syncUsername: string
   syncToken: string
   syncAccountId: string
+  /** optional AI configuration */
+  ai: AIConfig
   recent: string[]
 }
 

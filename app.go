@@ -17,6 +17,7 @@ import (
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
+	"novelide/internal/ai"
 	"novelide/internal/deep"
 	"novelide/internal/detect"
 	"novelide/internal/export"
@@ -49,6 +50,16 @@ type App struct {
 	// tools, sync, AI agents) are picked up. Guarded by mu.
 	watcher     *watch.Watcher
 	watchedPath string
+
+	// Active AI chat streams, so they can be cancelled, plus AI-proposed edits
+	// awaiting the author's approval. Both guarded by aiMu.
+	aiMu        sync.Mutex
+	aiStreams   map[string]context.CancelFunc
+	aiProposals map[string]*proposal
+	// aiSessionID is a stable per-process id sent as x-session-affinity so
+	// routing-based prefix caches (Cloudflare Workers AI) keep this app's shared
+	// system+tools+codex prefix hot across turns. Lazily set; guarded by aiMu.
+	aiSessionID string
 }
 
 func NewApp() *App {
@@ -75,6 +86,61 @@ func (a *App) startup(ctx context.Context) {
 // "dev" for source builds), for display in the UI.
 func (a *App) AppVersion() string {
 	return Version()
+}
+
+// GetAIConfig returns the stored optional-AI configuration.
+func (a *App) GetAIConfig() ai.Config {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.settings.AI
+}
+
+// SaveAIConfig persists the AI configuration (providers + per-mode models).
+func (a *App) SaveAIConfig(cfg ai.Config) (ai.Config, error) {
+	cfg = ai.Normalize(cfg)
+	a.mu.Lock()
+	a.settings.AI = cfg
+	s := a.settings
+	a.mu.Unlock()
+	if err := settings.Save(s); err != nil {
+		return cfg, err
+	}
+	return cfg, nil
+}
+
+// TestAIConnection makes a tiny live call to confirm a provider + model works,
+// returning a short reply on success (used by the settings "Test" button).
+func (a *App) TestAIConnection(p ai.NamedProvider, model string) (string, error) {
+	if strings.TrimSpace(model) == "" {
+		return "", fmt.Errorf("choose a model to test")
+	}
+	client, err := ai.New(ai.Provider{
+		Kind:    p.Kind,
+		BaseURL: strings.TrimRight(strings.TrimSpace(p.BaseURL), "/"),
+		APIKey:  p.APIKey,
+		Model:   model,
+	})
+	if err != nil {
+		return "", err
+	}
+	base := a.ctx
+	if base == nil {
+		base = context.Background()
+	}
+	ctx, cancel := context.WithTimeout(base, 45*time.Second)
+	defer cancel()
+	resp, err := client.Stream(ctx, ai.Request{
+		Messages:  []ai.Message{{Role: ai.RoleUser, Content: "Reply with just the word: ok"}},
+		MaxTokens: 16,
+	}, nil)
+	if err != nil {
+		return "", err
+	}
+	reply := strings.TrimSpace(resp.Text)
+	if reply == "" {
+		reply = "connected"
+	}
+	return reply, nil
 }
 
 // GetSettings returns the persisted application settings.

@@ -12,6 +12,10 @@ import type {
   ExportOptions,
   ExportTheme,
   RenameChapterResult,
+  AIConfig,
+  AIMessage,
+  AIProposal,
+  AINamedProvider,
   AuthConfig,
   ScanResult,
   SearchResults,
@@ -36,6 +40,30 @@ declare global {
 const app = () => window.go.main.App
 
 export const AppVersion = (): Promise<string> => app().AppVersion()
+
+// --- optional AI config ---
+export const GetAIConfig = (): Promise<AIConfig> => app().GetAIConfig()
+
+export const SaveAIConfig = (cfg: AIConfig): Promise<AIConfig> => app().SaveAIConfig(cfg)
+
+export const TestAIConnection = (provider: AINamedProvider, model: string): Promise<string> =>
+  app().TestAIConnection(provider, model)
+
+export const AIChat = (
+  streamId: string,
+  mode: string,
+  history: AIMessage[],
+  bookId: string,
+  chapter: string,
+): Promise<void> => app().AIChat(streamId, mode, history, bookId, chapter)
+
+export const AICancel = (streamId: string): Promise<void> => app().AICancel(streamId)
+
+export const ListAIProposals = (): Promise<AIProposal[]> => app().ListAIProposals()
+
+export const AIApplyProposal = (id: string): Promise<Workspace> => app().AIApplyProposal(id)
+
+export const AIDiscardProposal = (id: string): Promise<void> => app().AIDiscardProposal(id)
 
 export const SelectFolder = (title: string): Promise<string> => app().SelectFolder(title)
 

@@ -11,8 +11,9 @@ who dies in chapter twelve and strolls into a scene in chapter thirty, the eyes
 that were green in book one and brown in book three, the plot thread that
 silently disappears for nine chapters.
 
-Local-first. Plain files you own. **No cloud, no account, and no AI writing your
-book for you.**
+Local-first. Plain files you own. **No cloud, no account, no telemetry.** Any AI
+help is optional, off by default, strictly bring-your-own-key — and only ever
+*proposes*; you approve every word.
 
 > _Desktop app for Linux, Windows, and macOS. Free and offline._
 
@@ -88,6 +89,21 @@ goal** with a writing streak. Manage your manuscript naturally: right-click any
 book or chapter to rename or delete it, and NovelIDE keeps every codex timeline
 anchor and plan reference pointing at the right place.
 
+### 🤝 An optional writing companion — on your terms
+Bring your own AI, or none at all. NovelIDE can connect to any **OpenAI- or
+Anthropic-compatible** model — a cloud provider with your own API key
+(OpenAI, Anthropic, OpenRouter…) or a model running **locally** on your machine
+(Ollama, LM Studio…), with your own base URL and choice of model. It comes in two
+modes: a **writing assistant** for grounded chat and prose help, and a
+**planning agent** that can search your Codex and manuscript to reason about plot,
+arcs, and continuity. Both are **grounded in your actual world** — they read your
+Codex and prose rather than making things up. Most importantly, it **never edits
+your files on its own**: it *proposes* changes you approve. Prose edits appear
+**inline in your manuscript** — the old text struck through beside the suggestion,
+with Accept / Reject right there at the edit — while Codex and plan changes arrive
+as cards you Apply or Discard. It is **off by default** and does nothing until you
+enable it in Settings.
+
 ### 💾 Your files, forever
 Everything is plain **Markdown and YAML** in a folder you control — git-friendly,
 greppable, and readable in any text editor on earth. NovelIDE is a lens on your
@@ -104,31 +120,57 @@ my-series/
 
 ## Private by design
 
-Your manuscript never leaves your computer. No accounts, no servers, no
-telemetry — nothing about your writing is ever uploaded. NovelIDE runs fully
-offline: on a plane, in a cabin, anywhere.
+By default, your manuscript never leaves your computer. No accounts, no servers,
+no telemetry from NovelIDE — nothing about your writing is uploaded, and
+everything runs fully offline: on a plane, in a cabin, anywhere.
+
+The **one** exception is the optional AI assistant. It's off until you turn it on,
+and when you do, *you* choose the provider: point it at a **local** model and
+nothing leaves your machine; point it at a **cloud** provider and the context a
+message needs is sent to *that* provider when you use it (see below). Leave it off
+and none of this applies.
 
 ## 🤖 AI use — please read
 
-**NovelIDE is not an AI writing tool.** It does not generate prose, autocomplete
-your sentences, or "co-write" anything. Every word in your manuscript is yours.
+NovelIDE draws a hard line between everything that runs **locally** and the **one
+optional feature** that can talk to an AI model you choose. Nothing about AI is on
+until you turn it on.
 
-- **Your writing stays on your machine.** The consistency engine, entity
-  detection, and suggestions run locally using classical natural-language
-  processing — part-of-speech tagging, lemmatization, and named-entity
-  recognition — *not* a large language model and *not* a cloud service. Nothing
-  you write is transmitted anywhere or used to train anything, ever.
-- **One optional feature, clearly labeled.** NovelIDE includes an optional
-  "Deep scan" that uses a transformer-based model to catch names you may have
-  missed. It is **off by default**, must be switched on in Settings, and even
-  when enabled runs entirely on your own computer (the model downloads once, then
-  works offline). It never sends your manuscript to any external service, and it
-  only *finds* entities — it never writes.
-- **How NovelIDE itself was made.** This application was developed with
-  substantial help from an AI coding assistant, and its bundled example world
-  (the "Saltglass Chronicles") is an original work generated for demonstration.
-  The code is covered by an automated test suite; as with any software, review it
-  before trusting it with important work.
+**The core is not an AI writing tool, and never phones home.**
+The consistency engine, entity detection, and suggestions run entirely on your
+machine using classical natural-language processing — part-of-speech tagging,
+lemmatization, named-entity recognition — *not* a large language model and *not* a
+cloud service. The optional **"Deep scan"** adds a transformer model that also
+runs **fully on your computer** (it downloads once, then works offline) and only
+*finds* names you may have missed — it never writes. None of this transmits your
+manuscript anywhere, ever, or trains anything.
+
+**The optional AI assistant is bring-your-own, opt-in, and approval-gated.**
+- **Off by default.** There is no built-in model and no bundled API key. Nothing
+  happens until you open Settings, add a provider, and enable it.
+- **Your provider, your key, your choice.** Connect any OpenAI- or
+  Anthropic-compatible endpoint — a cloud service (OpenAI, Anthropic,
+  OpenRouter…) or a **local** model such as Ollama that keeps everything on your
+  machine.
+- **It leaves your machine only when you use it, and only to where you point it.**
+  When you send a message, the context that message needs — the instructions, your
+  Codex, the open chapter, and your conversation — is sent to the provider *you*
+  configured. Choose a local model and nothing leaves your computer; choose a
+  cloud provider and you are subject to that provider's terms. NovelIDE itself adds
+  no telemetry.
+- **It never writes to your files on its own.** The assistant *proposes* edits and
+  you approve them: prose changes appear inline in the editor with Accept / Reject,
+  and Codex or plan changes appear as cards you Apply or Discard. It can also
+  *read* your Codex and manuscript (to stay grounded) but cannot change anything
+  without your click.
+- **Your API key is stored in plain text** in your local settings file (like the
+  optional sync token), so protect that file as you would any credential.
+
+**How NovelIDE itself was made.** This application was developed with substantial
+help from an AI coding assistant, and its bundled example world (the "Saltglass
+Chronicles") is an original work generated for demonstration. The code is covered
+by an automated test suite; as with any software, review it before trusting it
+with important work.
 
 ## Download
 

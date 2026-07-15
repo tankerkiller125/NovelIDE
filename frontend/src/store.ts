@@ -1,9 +1,18 @@
 // Central reactive state for the IDE, shared via composables (no Pinia
 // needed at this size).
 import { computed, reactive } from 'vue'
-import { OpenWorkspace, ReadImageDataURL, SyncLinkPull, SyncNow, SyncStatusGet } from './api'
+import {
+  AIApplyProposal,
+  AIDiscardProposal,
+  OpenWorkspace,
+  ReadImageDataURL,
+  SyncLinkPull,
+  SyncNow,
+  SyncStatusGet,
+} from './api'
 import type { SyncOutcome } from './types'
 import type {
+  AIProposal,
   CardData,
   CardStatusLine,
   CodexEntry,
@@ -142,6 +151,12 @@ interface State {
   /** most recent batch of external filesystem changes; seq bumps each time so
    *  the open editor can react */
   externalChange: { modified: string[]; structural: string[]; seq: number }
+  /** whether the AI chat side panel is open */
+  aiPanelOpen: boolean
+  /** AI-proposed edits awaiting approval (prose ones render inline in the editor) */
+  proposals: AIProposal[]
+  /** id of a prose proposal the editor should scroll to (set by "Review in editor") */
+  reviewTarget: string | null
 }
 
 export const state = reactive<State>({
@@ -159,7 +174,45 @@ export const state = reactive<State>({
   reloadTick: 0,
   sync: null,
   externalChange: { modified: [], structural: [], seq: 0 },
+  aiPanelOpen: false,
+  proposals: [],
+  reviewTarget: null,
 })
+
+/** Queue an AI-proposed edit (from the ai:proposal event). */
+export function addProposal(p: AIProposal) {
+  if (!state.proposals.some((q) => q.id === p.id)) state.proposals.push(p)
+}
+
+/** Drop a proposal from the local queue. */
+export function removeProposal(id: string) {
+  state.proposals = state.proposals.filter((p) => p.id !== id)
+}
+
+/** Apply a proposal on the backend (used for codex/plan, and prose as a
+ *  fallback), refresh the workspace, and clear it from the queue. */
+export async function applyProposal(id: string) {
+  const ws = await AIApplyProposal(id)
+  setWorkspace(ws)
+  removeProposal(id)
+}
+
+/** Discard a proposal both server-side and locally. Also used after an inline
+ *  prose accept, where the editor already applied the text itself. */
+export function discardProposal(id: string) {
+  void AIDiscardProposal(id)
+  removeProposal(id)
+}
+
+/** Open the chapter a prose proposal targets so its inline edit is visible, and
+ *  ask its editor to scroll the edit into view. */
+export function reviewProposal(p: AIProposal) {
+  if (p.kind !== 'prose' || !p.bookId || !p.chapter) return
+  const tab: Tab = { kind: 'chapter', bookId: p.bookId, chapter: p.chapter }
+  openTab(tab)
+  pinTab(tabKey(tab))
+  state.reviewTarget = p.id
+}
 
 export const codexById = computed(() => {
   const map = new Map<string, CodexEntry>()

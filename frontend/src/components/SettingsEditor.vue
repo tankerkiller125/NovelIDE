@@ -3,6 +3,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { AppVersion, GetSettings, SaveSettings, SelectFolder, SpellStatus } from '../api'
 import { pinActiveTab, state } from '../store'
 import SyncSettings from './SyncSettings.vue'
+import AISettings from './AISettings.vue'
 
 const FONT_PRESETS = ['serif', 'sans', 'mono']
 
@@ -97,6 +98,14 @@ async function save() {
       syncUsername: state.settings?.syncUsername ?? '',
       syncToken: state.settings?.syncToken ?? '',
       syncAccountId: state.settings?.syncAccountId ?? '',
+      // Round-trip AI config (managed by the AI section) so a general save
+      // doesn't wipe it.
+      ai: state.settings?.ai ?? {
+        enabled: false,
+        providers: [],
+        assistant: { providerId: '', model: '', contextTokens: 0, maxOutputTokens: 0, temperature: 0 },
+        planning: { providerId: '', model: '', contextTokens: 0, maxOutputTokens: 0, temperature: 0 },
+      },
       recent: state.settings?.recent ?? [],
     })
     message.value = 'Saved.'
@@ -250,6 +259,8 @@ async function save() {
         <li v-for="r in state.settings?.recent ?? []" :key="r">{{ r }}</li>
       </ul>
     </section>
+
+    <AISettings />
 
     <SyncSettings />
 

@@ -86,6 +86,14 @@ function toggleFocus() {
 
     <button
       class="sb-focus"
+      :class="{ on: state.aiPanelOpen }"
+      title="AI assistant"
+      @click="state.aiPanelOpen = !state.aiPanelOpen"
+    >
+      🤖 AI
+    </button>
+    <button
+      class="sb-focus"
       :class="{ on: state.focusMode }"
       title="Focus mode (Ctrl+Shift+F)"
       @click="toggleFocus"

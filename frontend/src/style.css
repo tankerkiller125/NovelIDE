@@ -123,6 +123,43 @@ textarea {
   text-underline-offset: 3px;
 }
 
+/* ---- Inline AI prose-edit proposals ---- */
+.cm-prop-old {
+  background: color-mix(in srgb, var(--nv-danger, #e5484d) 16%, transparent);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--nv-danger, #e5484d) 70%, transparent);
+  opacity: 0.8;
+}
+.cm-prop {
+  white-space: normal;
+}
+.cm-prop-new {
+  background: color-mix(in srgb, var(--nv-accent, #3b82f6) 18%, transparent);
+  border-radius: 2px;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--nv-accent, #3b82f6) 55%, transparent);
+  padding: 0 1px;
+}
+.cm-prop-btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 3px;
+  font-size: 0.8em;
+  line-height: 1;
+  padding: 1px 4px;
+  margin-left: 3px;
+  vertical-align: baseline;
+  color: #fff;
+}
+.cm-prop-accept {
+  background: #2ea043;
+}
+.cm-prop-reject {
+  background: #b62324;
+}
+.cm-prop-btn:hover {
+  filter: brightness(1.15);
+}
+
 /* ---- Editorial annotations (CriticMarkup) ---- */
 .cm-annot {
   background: color-mix(in srgb, #e8c368 26%, transparent);

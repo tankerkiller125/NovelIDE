@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"novelide/internal/ai"
 )
 
 // Settings are the user's application preferences.
@@ -46,6 +48,11 @@ type Settings struct {
 	SyncUsername  string `json:"syncUsername"`
 	SyncToken     string `json:"syncToken"`
 	SyncAccountID string `json:"syncAccountId"`
+
+	// AI holds the optional AI configuration (providers + per-mode models).
+	// Empty/disabled by default. API keys live here in plaintext, like the
+	// sync token — same local-config trust model.
+	AI ai.Config `json:"ai"`
 
 	// Recent lists recently opened workspace paths, most recent first.
 	Recent []string `json:"recent"`

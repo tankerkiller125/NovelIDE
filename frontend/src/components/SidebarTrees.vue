@@ -112,6 +112,14 @@ function openChapterMenu(e: MouseEvent, bookId: string, chapter: string) {
 }
 function closeMenu() {
   ctx.value = null
+  moreOpen.value = false
+}
+
+// Footer "⋯ More" overflow menu for secondary views.
+const moreOpen = ref(false)
+function goView(kind: 'search' | 'graph' | 'history' | 'export') {
+  openTab({ kind })
+  moreOpen.value = false
 }
 onMounted(() => {
   window.addEventListener('click', closeMenu)
@@ -353,10 +361,15 @@ function runCtx(action: string) {
         >
           ⟳
         </button>
-        <button class="btn icon" title="Search &amp; replace across the project" @click="openTab({ kind: 'search' })">🔍</button>
-        <button class="btn icon" title="Revision history &amp; snapshots" @click="openTab({ kind: 'history' })">🕓</button>
-        <button class="btn icon" title="Relationship graph" @click="openTab({ kind: 'graph' })">🕸</button>
-        <button class="btn icon" title="Export book" @click="openTab({ kind: 'export' })">⬇</button>
+        <div class="sb-more">
+          <button class="btn icon" title="More…" @click.stop="moreOpen = !moreOpen">⋯</button>
+          <div v-if="moreOpen" class="sb-more-menu" @click.stop>
+            <button class="ctx-item" @click="goView('search')">🔍 Search &amp; replace</button>
+            <button class="ctx-item" @click="goView('graph')">🕸 Relationship graph</button>
+            <button class="ctx-item" @click="goView('history')">🕓 History &amp; snapshots</button>
+            <button class="ctx-item" @click="goView('export')">⬇ Export book</button>
+          </div>
+        </div>
         <button class="btn icon" title="Settings" @click="openTab({ kind: 'settings' })">⚙</button>
         <button class="btn icon" title="Switch project" @click="switchProject">⇄</button>
       </div>
@@ -579,6 +592,24 @@ function runCtx(action: string) {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+.sb-more {
+  position: relative;
+  display: inline-flex;
+}
+.sb-more-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  min-width: 190px;
+  background: var(--nv-panel);
+  border: 1px solid var(--nv-border);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
 }
 .sb-sync-msg {
   font-size: 11px;

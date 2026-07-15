@@ -9,11 +9,22 @@ import { search, searchKeymap, highlightSelectionMatches, openSearchPanel } from
 import { tags } from '@lezer/highlight'
 import { setHeading, toggleLinePrefix, toggleWrap, wrapLink } from '../editor/format'
 import { AddToDictionary, DeepScan, ReadChapter, SaveChapter, ScanText, SpellSuggest } from '../api'
-import { cardDataAt, codexById, openTab, pinTab, promptInput, state, tabKey } from '../store'
+import {
+  cardDataAt,
+  codexById,
+  discardProposal,
+  openTab,
+  pinTab,
+  promptInput,
+  state,
+  tabKey,
+} from '../store'
 import { entityExtension, setScanResult, toScanState } from '../editor/entityPlugin'
 import { addAnnotation, annotationExtension } from '../editor/annotations'
 import { insertSceneMarker, sceneExtension } from '../editor/scenes'
 import { liveMarkdownExtension } from '../editor/livemarkdown'
+import { proposalsExtension, setProseProposals } from '../editor/proposals'
+import type { ProseProposal } from '../editor/proposals'
 import type { Flag } from '../types'
 
 const props = defineProps<{ bookId: string; chapter: string }>()
@@ -26,6 +37,32 @@ const host = ref<HTMLElement | null>(null)
 const view = shallowRef<EditorView | null>(null)
 const loading = ref(true)
 const error = ref('')
+
+// AI prose-edit proposals targeting the chapter open in this editor; pushed into
+// the CodeMirror extension so they render inline (see editor/proposals.ts).
+const proseProposals = computed<ProseProposal[]>(() =>
+  state.proposals
+    .filter((p) => p.kind === 'prose' && p.bookId === props.bookId && p.chapter === props.chapter)
+    .map((p) => ({ id: p.id, find: p.before ?? '', replace: p.after ?? '' })),
+)
+function syncProposals(v: EditorView) {
+  v.dispatch({ effects: setProseProposals.of(proseProposals.value) })
+}
+watch(proseProposals, () => {
+  if (view.value) syncProposals(view.value)
+})
+// Scroll to a proposal when "Review in editor" targets this chapter.
+function applyReviewTarget() {
+  const id = state.reviewTarget
+  const v = view.value
+  if (!id || !v) return
+  const p = state.proposals.find((x) => x.id === id)
+  if (!p || p.bookId !== props.bookId || p.chapter !== props.chapter) return
+  const idx = p.before ? v.state.doc.toString().indexOf(p.before) : -1
+  if (idx >= 0) v.dispatch({ selection: { anchor: idx }, scrollIntoView: true })
+  state.reviewTarget = null
+}
+watch(() => state.reviewTarget, applyReviewTarget)
 
 // The content we last read from / wrote to disk, used to tell our own saves
 // apart from external edits when the file changes on disk.
@@ -267,6 +304,8 @@ async function setup() {
           },
         }),
         annotationExtension(),
+        // Inline AI prose-edit proposals; resolving clears the server proposal.
+        proposalsExtension((id) => discardProposal(id)),
         EditorView.updateListener.of((u) => {
           if (u.docChanged) {
             state.dirtyChapters.add(dirtyKey())
@@ -283,6 +322,8 @@ async function setup() {
   view.value = v
   loading.value = false
   runScan(v)
+  syncProposals(v)
+  applyReviewTarget()
   applyPendingJump()
 }
 
