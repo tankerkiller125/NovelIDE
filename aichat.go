@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
 	"sort"
 	"strings"
 
+	"github.com/microsoft/agent-framework-go/agent"
+	"github.com/microsoft/agent-framework-go/message"
+	"github.com/microsoft/agent-framework-go/tool"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"novelide/internal/ai"
@@ -133,23 +134,6 @@ func chapterContext(ws *model.Workspace, bookID, chapter string, maxChars int) s
 		title, bookID, chapter, note, text)
 }
 
-// sessionAffinity returns this process's stable x-session-affinity id, minting
-// one on first use. A single value for the whole app keeps the shared cached
-// prefix (system + tools + codex) pinned to one node across every chat turn.
-func (a *App) sessionAffinity() string {
-	a.aiMu.Lock()
-	defer a.aiMu.Unlock()
-	if a.aiSessionID == "" {
-		var b [16]byte
-		if _, err := rand.Read(b[:]); err != nil {
-			a.aiSessionID = "novelide-session"
-		} else {
-			a.aiSessionID = "novelide-" + hex.EncodeToString(b[:])
-		}
-	}
-	return a.aiSessionID
-}
-
 func (a *App) registerStream(id string, cancel context.CancelFunc) {
 	a.aiMu.Lock()
 	defer a.aiMu.Unlock()
@@ -183,7 +167,7 @@ func (a *App) AICancel(streamID string) {
 // "ai:done" ({id, stopReason}) or "ai:error" ({id, error}). history holds the
 // prior user/assistant turns (no injected context); bookID/chapter name the
 // chapter to ground on.
-func (a *App) AIChat(streamID, mode string, history []ai.Message, bookID, chapter string) error {
+func (a *App) AIChat(streamID, mode string, history []ai.Message, bookID, chapter, providerID, model string) error {
 	a.mu.RLock()
 	cfg := a.settings.AI
 	ws := a.ws
@@ -192,53 +176,31 @@ func (a *App) AIChat(streamID, mode string, history []ai.Message, bookID, chapte
 	if !cfg.Enabled {
 		return a.aiFail(streamID, fmt.Errorf("AI is turned off — enable it in Settings"))
 	}
-	modeCfg := cfg.Assistant
-	if mode == "planning" {
-		modeCfg = cfg.Planning
-	}
-	provider, err := cfg.Resolve(modeCfg)
-	if err != nil {
-		return a.aiFail(streamID, err)
-	}
-	client, err := ai.New(provider)
+	// The model to run is chosen in the chat picker (providerID + model); the mode
+	// only selects the system prompt and tool set below.
+	provider, err := cfg.ResolveModel(providerID, model)
 	if err != nil {
 		return a.aiFail(streamID, err)
 	}
 
-	window := modeCfg.ContextWindow()
-	// Cached prefix: static instructions + the Codex world bible.
-	system := systemPrompt(mode) + codexBible(ws, window*2)
-
-	// Volatile: prepend the current chapter to the last user turn.
-	msgs := append([]ai.Message(nil), history...)
-	if len(msgs) > 0 {
-		if ctxBlock := chapterContext(ws, bookID, chapter, window*2); ctxBlock != "" {
-			li := len(msgs) - 1
-			for li >= 0 && msgs[li].Role != ai.RoleUser {
-				li--
-			}
-			if li >= 0 {
-				msgs[li].Content = ctxBlock + msgs[li].Content
-			}
-		}
+	// A locally-installed ACP coding agent takes a different path: it's launched
+	// as a subprocess and reads the manuscript itself.
+	if provider.Kind == ai.KindACP {
+		return a.runACP(streamID, provider, ws, history, bookID, chapter)
 	}
+
+	window := ai.DefaultContextTokens
+	// System instructions: static per mode + the deterministic Codex world bible.
+	instructions := systemPrompt(mode) + codexBible(ws, window*2)
 
 	// Read tools in both modes; write (propose_*) tools per mode — the assistant
-	// proposes prose edits, planning also proposes Codex/plan edits. The set is
-	// static per mode, so it stays in the cached prefix across the loop.
-	tools := append(readTools(), writeTools(mode)...)
-	req := ai.Request{
-		System:      system,
-		Messages:    msgs,
-		Tools:       tools,
-		Temperature: modeCfg.Temperature,
-		MaxTokens:   modeCfg.OutputReserve(),
-		CachePrefix: true,                // cache system + tools (Anthropic); OpenAI auto-caches the prefix
-		SessionID:   a.sessionAffinity(), // pin routing-based prefix caches (Cloudflare) to one node
+	// proposes prose edits, planning also proposes Codex/plan edits. An A2A agent
+	// runs remotely with its own tools, so none of ours apply.
+	var tools []tool.Tool
+	if provider.Kind != ai.KindA2A {
+		tools = a.readTools()
+		tools = append(tools, a.writeTools(streamID, mode)...)
 	}
-	req = ai.Budget(req, window, modeCfg.OutputReserve())
-	aiDebugf("start stream=%s mode=%s provider=%s model=%s tools=%d msgs=%d ~inTokens=%d",
-		streamID, mode, provider.Kind, provider.Model, len(req.Tools), len(req.Messages), ai.EstimateRequestTokens(req))
 
 	base := a.ctx
 	if base == nil {
@@ -249,32 +211,72 @@ func (a *App) AIChat(streamID, mode string, history []ai.Message, bookID, chapte
 	defer a.unregisterStream(streamID)
 	defer cancel()
 
-	var deltaCount, deltaChars int
-	resp, err := ai.RunAgent(ctx, client, req,
-		a.toolExecutor(streamID, mode), // read tools always; write tools queue proposals (planning only)
-		func(t string) {
-			deltaCount++
-			deltaChars += len(t)
-			runtime.EventsEmit(a.ctx, "ai:delta", map[string]any{"id": streamID, "text": t})
-		},
-		func(tc ai.ToolCall) {
-			aiDebugf("stream=%s tool-call %s args=%s", streamID, tc.Name, tc.Arguments)
-			runtime.EventsEmit(a.ctx, "ai:tool", map[string]any{
-				"id": streamID, "name": tc.Name, "args": tc.Arguments,
-			})
-		},
-		ai.DefaultAgentSteps,
-	)
+	ag, err := ai.NewAgent(ctx, provider, instructions, tools)
 	if err != nil {
-		aiDebugf("stream=%s ERROR after %d deltas (%d chars): %v", streamID, deltaCount, deltaChars, err)
 		return a.aiFail(streamID, err)
 	}
-	aiDebugf("stream=%s done: %d deltas (%d chars streamed), finalTextLen=%d stop=%q toolCalls=%d",
-		streamID, deltaCount, deltaChars, len(resp.Text), resp.StopReason, len(resp.ToolCalls))
-	runtime.EventsEmit(a.ctx, "ai:done", map[string]any{
-		"id": streamID, "stopReason": resp.StopReason,
-	})
+	msgs := mafMessages(ws, history, bookID, chapter, window*2)
+	aiDebugf("start stream=%s mode=%s provider=%s model=%s tools=%d msgs=%d",
+		streamID, mode, provider.Kind, provider.Model, len(tools), len(msgs))
+
+	// The Agent Framework runs the whole tool-use loop internally; we just stream
+	// its updates to the frontend. Text deltas and tool calls are Content items.
+	var deltaCount, deltaChars int
+	var stopReason string
+	for update, err := range ag.Run(ctx, msgs, agent.Stream(true)) {
+		if err != nil {
+			aiDebugf("stream=%s ERROR after %d deltas: %v", streamID, deltaCount, err)
+			return a.aiFail(streamID, err)
+		}
+		for _, c := range update.Contents {
+			switch cc := c.(type) {
+			case *message.TextContent:
+				if cc.Text == "" {
+					continue
+				}
+				deltaCount++
+				deltaChars += len(cc.Text)
+				runtime.EventsEmit(a.ctx, "ai:delta", map[string]any{"id": streamID, "text": cc.Text})
+			case *message.FunctionCallContent:
+				aiDebugf("stream=%s tool-call %s args=%s", streamID, cc.Name, cc.Arguments)
+				runtime.EventsEmit(a.ctx, "ai:tool", map[string]any{"id": streamID, "name": cc.Name, "args": cc.Arguments})
+			}
+		}
+		if update.FinishReason != "" {
+			stopReason = update.FinishReason
+		}
+	}
+	aiDebugf("stream=%s done: %d deltas (%d chars) stop=%q", streamID, deltaCount, deltaChars, stopReason)
+	runtime.EventsEmit(a.ctx, "ai:done", map[string]any{"id": streamID, "stopReason": stopReason})
 	return nil
+}
+
+// mafMessages converts the frontend conversation history into Agent Framework
+// messages, prepending the current chapter's text to the most recent user turn.
+func mafMessages(ws *model.Workspace, history []ai.Message, bookID, chapter string, maxChars int) []*message.Message {
+	ctxBlock := chapterContext(ws, bookID, chapter, maxChars)
+	lastUser := -1
+	for i, m := range history {
+		if m.Role == ai.RoleUser {
+			lastUser = i
+		}
+	}
+	msgs := make([]*message.Message, 0, len(history))
+	for i, m := range history {
+		content := m.Content
+		if i == lastUser && ctxBlock != "" {
+			content = ctxBlock + content
+		}
+		role := message.RoleUser
+		if m.Role == ai.RoleAssistant {
+			role = message.RoleAssistant
+		}
+		msgs = append(msgs, &message.Message{
+			Role:     role,
+			Contents: message.Contents{&message.TextContent{Text: content}},
+		})
+	}
+	return msgs
 }
 
 func (a *App) aiFail(streamID string, err error) error {

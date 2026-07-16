@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/microsoft/agent-framework-go/tool"
+	"github.com/microsoft/agent-framework-go/tool/functool"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"novelide/internal/ai"
@@ -19,10 +23,10 @@ import (
 // never writes to disk directly. The apply payload is kind-specific.
 type proposal struct {
 	ID      string
-	Kind    string // "codex" | "plan" | "prose"
+	Kind    string // "codex" | "plan" | "prose" | "file"
 	Summary string
 	Target  string // human label: entry name, or "Book › chapter"
-	Before  string // preview: prior text (prose/plan) — for the diff view
+	Before  string // preview: prior text (prose/plan/file) — for the diff view
 	After   string // preview: proposed text
 
 	// codex: the fully-merged entry plus its prior identity (for relocation).
@@ -37,6 +41,9 @@ type proposal struct {
 	// prose: an exact-match find/replace within a chapter.
 	chapter    string
 	find, repl string
+
+	// file: an ACP agent's whole-file write (absolute path, jailed to workspace).
+	path string
 }
 
 // proposalView is the UI-safe projection sent to the frontend (no apply guts).
@@ -57,77 +64,72 @@ func (p *proposal) view() proposalView {
 	return proposalView{p.ID, p.Kind, p.Summary, p.Target, p.Before, p.After, p.bookID, p.chapter}
 }
 
-// writeTools are the propose_* tools for a mode. They queue an edit for the
-// author to approve rather than applying it, so they are safe to auto-run; their
-// definitions are static, keeping them in the cached prefix. The writing
-// assistant gets prose edits (propose a concrete change instead of pasting a big
-// rewrite); planning also gets Codex and plan structure edits.
-func writeTools(mode string) []ai.Tool {
-	obj := func(props, required string) json.RawMessage {
-		return json.RawMessage(`{"type":"object","properties":{` + props + `}` + required + `}`)
+// Write-tool argument shapes. Optional fields use pointers/omitempty so that, on
+// re-marshal, fields the model didn't set are omitted — preserving the
+// "only the fields you set change" merge semantics in the build* functions.
+type (
+	proseEditArgs struct {
+		BookID  string `json:"bookId"`
+		Chapter string `json:"chapter"`
+		Find    string `json:"find"`
+		Replace string `json:"replace"`
 	}
-	prose := ai.Tool{
+	codexEditArgs struct {
+		ID      string            `json:"id,omitempty"`
+		Name    string            `json:"name"`
+		Type    string            `json:"type"`
+		Summary *string           `json:"summary,omitempty"`
+		Details *string           `json:"details,omitempty"`
+		Aliases []string          `json:"aliases,omitempty"`
+		Fields  map[string]string `json:"fields,omitempty"`
+	}
+	planEditArgs struct {
+		BookID   string   `json:"bookId"`
+		Chapter  string   `json:"chapter"`
+		Synopsis *string  `json:"synopsis,omitempty"`
+		Status   *string  `json:"status,omitempty"`
+		POV      *string  `json:"pov,omitempty"`
+		Location *string  `json:"location,omitempty"`
+		When     *string  `json:"when,omitempty"`
+		Arcs     []string `json:"arcs,omitempty"`
+	}
+)
+
+// writeTools are the propose_* tools for a mode. Their handlers queue an edit for
+// the author to approve (they never touch files directly), tagged with streamID
+// so a queued proposal surfaces live. The writing assistant gets prose edits;
+// planning also gets Codex and plan structure edits.
+func (a *App) writeTools(streamID, mode string) []tool.Tool {
+	propose := func(name string, in any) (string, error) {
+		raw, _ := json.Marshal(in)
+		res := a.proposeEdit(streamID, ai.ToolCall{Name: name, Arguments: string(raw)})
+		aiDebugf("stream=%s exec %s -> %.200s", streamID, name, res)
+		return res, nil
+	}
+	prose := functool.MustNew(functool.Config{
 		Name: "propose_prose_edit",
 		Description: "Propose a precise edit to a chapter's prose for the author to approve — prefer this over pasting a large rewritten passage. " +
 			"'find' must be an exact, unique substring of the current chapter text; it will be replaced with 'replace'. " +
 			"Keep 'find' short but unique. The current chapter's bookId and chapter are given in the context; use read_chapter to copy the exact text.",
-		Schema: obj(`"bookId":{"type":"string"},"chapter":{"type":"string","description":"chapter file name"},`+
-			`"find":{"type":"string"},"replace":{"type":"string"}`, `,"required":["bookId","chapter","find","replace"]`),
-	}
+	}, func(_ context.Context, in proseEditArgs) (string, error) { return propose("propose_prose_edit", in) })
+
 	if mode != "planning" {
-		return []ai.Tool{prose} // writing assistant: prose edits only
+		return []tool.Tool{prose} // writing assistant: prose edits only
 	}
-	return []ai.Tool{
-		{
-			Name: "propose_codex_edit",
-			Description: "Propose creating or updating a Codex entry for the author to approve. " +
-				"Omit id to create a new entry; pass an existing id to update it (only the fields you set change; the rest are kept).",
-			Schema: obj(`"id":{"type":"string","description":"existing entry id to update; omit to create"},`+
-				`"name":{"type":"string"},"type":{"type":"string","description":"schema type id, e.g. character"},`+
-				`"summary":{"type":"string"},"details":{"type":"string","description":"markdown body"},`+
-				`"aliases":{"type":"array","items":{"type":"string"}},`+
-				`"fields":{"type":"object","additionalProperties":{"type":"string"}}`, `,"required":["name","type"]`),
-		},
-		{
-			Name: "propose_plan_edit",
-			Description: "Propose changes to a chapter's planning card (synopsis, status, pov, location, when, arcs) for the author to approve. " +
-				"Only the fields you set change.",
-			Schema: obj(`"bookId":{"type":"string"},"chapter":{"type":"string","description":"chapter file name"},`+
-				`"synopsis":{"type":"string"},"status":{"type":"string","enum":["outlined","drafted","revised","final"]},`+
-				`"pov":{"type":"string","description":"codex entry id"},"location":{"type":"string","description":"codex entry id"},`+
-				`"when":{"type":"string"},"arcs":{"type":"array","items":{"type":"string"}}`, `,"required":["bookId","chapter"]`),
-		},
-		prose,
-	}
-}
 
-// writeToolAllowed reports whether a write tool may run in the given mode. Prose
-// edits work in both modes; Codex/plan structure edits are planning-only.
-func writeToolAllowed(mode, name string) bool {
-	switch name {
-	case "propose_prose_edit":
-		return true
-	case "propose_codex_edit", "propose_plan_edit":
-		return mode == "planning"
-	}
-	return false
-}
+	codex := functool.MustNew(functool.Config{
+		Name: "propose_codex_edit",
+		Description: "Propose creating or updating a Codex entry for the author to approve. " +
+			"Omit id to create a new entry; pass an existing id to update it (only the fields you set change; the rest are kept).",
+	}, func(_ context.Context, in codexEditArgs) (string, error) { return propose("propose_codex_edit", in) })
 
-// toolExecutor returns the exec callback for one chat turn. Read tools always
-// run; write tools queue a proposal tagged with this stream, gated to the modes
-// that offer them. Binding streamID here lets a queued proposal surface live.
-func (a *App) toolExecutor(streamID, mode string) func(ai.ToolCall) string {
-	return func(call ai.ToolCall) string {
-		switch call.Name {
-		case "propose_codex_edit", "propose_plan_edit", "propose_prose_edit":
-			if !writeToolAllowed(mode, call.Name) {
-				return "error: the " + call.Name + " tool isn't available in this mode"
-			}
-			return a.proposeEdit(streamID, call)
-		default:
-			return a.execTool(call)
-		}
-	}
+	plan := functool.MustNew(functool.Config{
+		Name: "propose_plan_edit",
+		Description: "Propose changes to a chapter's planning card (synopsis, status, pov, location, when, arcs) for the author to approve. " +
+			"Only the fields you set change.",
+	}, func(_ context.Context, in planEditArgs) (string, error) { return propose("propose_plan_edit", in) })
+
+	return []tool.Tool{codex, plan, prose}
 }
 
 // proposeEdit builds a proposal from a write tool call, stores it, emits it to
@@ -413,9 +415,30 @@ func (a *App) AIApplyProposal(id string) (*model.Workspace, error) {
 		return a.applyPlanProposal(p)
 	case "prose":
 		return a.applyProseProposal(p)
+	case "file":
+		return a.applyFileProposal(p)
 	default:
 		return nil, fmt.Errorf("unknown proposal kind %q", p.Kind)
 	}
+}
+
+// applyFileProposal writes an ACP agent's whole-file edit to disk after the
+// author approves it, taking a safety snapshot first. The path was jailed to the
+// workspace when the proposal was created; re-verify before writing.
+func (a *App) applyFileProposal(p *proposal) (*model.Workspace, error) {
+	root, err := a.workspacePath()
+	if err != nil {
+		return nil, err
+	}
+	abs, err := jailPath(root, p.path)
+	if err != nil {
+		return nil, err
+	}
+	_, _, _ = history.Create(root, "before AI file edit", false, time.Now())
+	if err := os.WriteFile(abs, []byte(p.After), 0o644); err != nil {
+		return nil, err
+	}
+	return a.reload()
 }
 
 func (a *App) applyPlanProposal(p *proposal) (*model.Workspace, error) {

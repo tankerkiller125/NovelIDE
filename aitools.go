@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"sort"
 	"strings"
+
+	"github.com/microsoft/agent-framework-go/tool"
+	"github.com/microsoft/agent-framework-go/tool/functool"
 
 	"novelide/internal/ai"
 	"novelide/internal/model"
@@ -14,42 +18,70 @@ import (
 // can't blow the model's context window inside the agent loop.
 const maxToolResultChars = 6000
 
+// Tool argument shapes. functool generates each tool's JSON schema from these,
+// and they marshal back to the JSON that execTool already knows how to dispatch.
+type (
+	searchCodexArgs struct {
+		Query string `json:"query"`
+	}
+	getEntryArgs struct {
+		ID string `json:"id"`
+	}
+	searchManuscriptArgs struct {
+		Query         string `json:"query"`
+		WholeWord     bool   `json:"wholeWord,omitempty"`
+		CaseSensitive bool   `json:"caseSensitive,omitempty"`
+	}
+	readChapterArgs struct {
+		BookID  string `json:"bookId"`
+		Chapter string `json:"chapter"`
+		Offset  int    `json:"offset,omitempty"`
+		Limit   int    `json:"limit,omitempty"`
+	}
+	listStructureArgs struct{}
+)
+
+// toolCall re-marshals a typed tool argument struct and dispatches it through
+// execTool, reusing the existing (tested) dispatch and workspace access.
+func (a *App) toolCall(name string, in any) (string, error) {
+	raw, _ := json.Marshal(in)
+	res := a.execTool(ai.ToolCall{Name: name, Arguments: string(raw)})
+	aiDebugf("exec %s -> %.120s", name, res)
+	return res, nil
+}
+
 // readTools are the safe, auto-run tools that let the AI look things up on
 // demand — cheaper and more precise than stuffing the whole world into every
-// prompt. Their definitions are static, so they stay in the cached prefix.
-func readTools() []ai.Tool {
-	obj := func(props, required string) json.RawMessage {
-		return json.RawMessage(`{"type":"object","properties":{` + props + `}` + required + `}`)
-	}
-	return []ai.Tool{
-		{
+// prompt.
+func (a *App) readTools() []tool.Tool {
+	return []tool.Tool{
+		functool.MustNew(functool.Config{
 			Name:        "search_codex",
 			Description: "Search the Codex (the story's world bible) for entries by name, alias, type, or summary text. Returns matching entries and their ids.",
-			Schema:      obj(`"query":{"type":"string","description":"text to search for"}`, `,"required":["query"]`),
-		},
-		{
+		}, func(_ context.Context, in searchCodexArgs) (string, error) { return a.toolCall("search_codex", in) }),
+
+		functool.MustNew(functool.Config{
 			Name:        "get_entry",
 			Description: "Fetch one full Codex entry by id: summary, details, fields, timelined facts, status timeline, and relationships.",
-			Schema:      obj(`"id":{"type":"string"}`, `,"required":["id"]`),
-		},
-		{
+		}, func(_ context.Context, in getEntryArgs) (string, error) { return a.toolCall("get_entry", in) }),
+
+		functool.MustNew(functool.Config{
 			Name:        "search_manuscript",
 			Description: "Search the manuscript prose across all chapters. Returns matches with the book, chapter, line, and a snippet.",
-			Schema:      obj(`"query":{"type":"string"},"wholeWord":{"type":"boolean"},"caseSensitive":{"type":"boolean"}`, `,"required":["query"]`),
-		},
-		{
+		}, func(_ context.Context, in searchManuscriptArgs) (string, error) {
+			return a.toolCall("search_manuscript", in)
+		}),
+
+		functool.MustNew(functool.Config{
 			Name: "read_chapter",
 			Description: "Read a chapter's text, paged for long chapters. Returns up to ~6000 characters starting at 'offset' (default 0) plus totalChars, returned, hasMore, and nextOffset. " +
 				"If hasMore is true, call again with offset=nextOffset to read the next chunk. Use the bookId and chapter filename from list_structure (or the current chapter given in context).",
-			Schema: obj(`"bookId":{"type":"string"},"chapter":{"type":"string","description":"chapter file name"},`+
-				`"offset":{"type":"integer","description":"character offset to start from (default 0)"},`+
-				`"limit":{"type":"integer","description":"max characters to return (default and max ~6000)"}`, `,"required":["bookId","chapter"]`),
-		},
-		{
+		}, func(_ context.Context, in readChapterArgs) (string, error) { return a.toolCall("read_chapter", in) }),
+
+		functool.MustNew(functool.Config{
 			Name:        "list_structure",
 			Description: "List the books and their chapters (with plan synopsis and status) plus the series synopsis. Call this first to learn ids.",
-			Schema:      obj("", ""),
-		},
+		}, func(_ context.Context, in listStructureArgs) (string, error) { return a.toolCall("list_structure", in) }),
 	}
 }
 

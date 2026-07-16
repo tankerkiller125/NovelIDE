@@ -7,61 +7,30 @@ import (
 	"github.com/google/uuid"
 )
 
-// NamedProvider is a reusable, named connection the user configures once and
-// references from either mode. The model is chosen per mode, so the same
-// connection can drive different models.
+// NamedProvider is a reusable, named connection the user configures once. The
+// model to run is chosen per chat turn from the provider's Models list.
 type NamedProvider struct {
 	ID      string       `json:"id"`
 	Name    string       `json:"name"`
 	Kind    ProviderKind `json:"kind"`
 	BaseURL string       `json:"baseUrl"`
 	APIKey  string       `json:"apiKey"`
-	// NoStream disables SSE streaming for this endpoint (send stream:false, get
-	// the whole reply at once). Turn it on for gateways whose streaming is broken
-	// — e.g. Cloudflare's OpenAI-compat endpoint serving Claude.
-	NoStream bool `json:"noStream"`
+	// Models is the list of model ids the user makes available for this provider,
+	// shown in the chat model picker. Ignored for acp/a2a (no model to choose).
+	Models []string `json:"models,omitempty"`
 }
 
-// ModeConfig is one mode's model selection and budgeting. ContextTokens is the
-// model's context window and MaxOutputTokens the reserve for the reply — both
-// user-set because there's no reliable cross-provider way to discover them.
-type ModeConfig struct {
-	ProviderID      string  `json:"providerId"`
-	Model           string  `json:"model"`
-	ContextTokens   int     `json:"contextTokens"`
-	MaxOutputTokens int     `json:"maxOutputTokens"`
-	Temperature     float64 `json:"temperature"`
-}
-
-// Config is the whole optional-AI configuration, persisted in settings.
+// Config is the whole optional-AI configuration, persisted in settings. There is
+// no fixed per-mode model any more: the user configures providers + their models
+// and picks which model to run for each chat turn.
 type Config struct {
 	Enabled   bool            `json:"enabled"`
 	Providers []NamedProvider `json:"providers"`
-	Assistant ModeConfig      `json:"assistant"`
-	Planning  ModeConfig      `json:"planning"`
 }
 
-// Defaults for budgeting when a mode leaves them zero.
-const (
-	DefaultContextTokens   = 8192
-	DefaultMaxOutputTokens = 2048
-)
-
-// ContextTokens returns the configured window or a conservative default.
-func (m ModeConfig) ContextWindow() int {
-	if m.ContextTokens > 0 {
-		return m.ContextTokens
-	}
-	return DefaultContextTokens
-}
-
-// OutputReserve returns the tokens reserved for the model's reply.
-func (m ModeConfig) OutputReserve() int {
-	if m.MaxOutputTokens > 0 {
-		return m.MaxOutputTokens
-	}
-	return DefaultMaxOutputTokens
-}
+// DefaultContextTokens sizes how much Codex/chapter context is injected into a
+// turn (there's no reliable cross-provider way to discover a model's window).
+const DefaultContextTokens = 8192
 
 func (c Config) provider(id string) (NamedProvider, bool) {
 	for _, p := range c.Providers {
@@ -72,19 +41,40 @@ func (c Config) provider(id string) (NamedProvider, bool) {
 	return NamedProvider{}, false
 }
 
-// Resolve turns a mode into a runtime Provider (connection + chosen model).
-func (c Config) Resolve(m ModeConfig) (Provider, error) {
-	p, ok := c.provider(m.ProviderID)
+// ResolveModel turns a provider id + chosen model into a runtime Provider,
+// validating per the provider kind. ACP and A2A providers take no model (an
+// agent id / card URL lives in BaseURL); Gemini's base URL is optional;
+// OpenAI/Anthropic need both a model and a base URL.
+func (c Config) ResolveModel(providerID, model string) (Provider, error) {
+	p, ok := c.provider(providerID)
 	if !ok {
-		return Provider{}, fmt.Errorf("no provider configured for this mode")
+		return Provider{}, fmt.Errorf("pick a model to chat with (none is configured)")
 	}
-	if strings.TrimSpace(m.Model) == "" {
-		return Provider{}, fmt.Errorf("no model set for this mode")
+	switch p.Kind {
+	case KindACP:
+		if strings.TrimSpace(p.BaseURL) == "" {
+			return Provider{}, fmt.Errorf("choose a local agent for provider %q", p.Name)
+		}
+		return Provider{Kind: p.Kind, BaseURL: p.BaseURL}, nil
+	case KindA2A:
+		if strings.TrimSpace(p.BaseURL) == "" {
+			return Provider{}, fmt.Errorf("provider %q needs the agent card URL", p.Name)
+		}
+		return Provider{Kind: p.Kind, BaseURL: p.BaseURL}, nil
+	case KindGemini:
+		if strings.TrimSpace(model) == "" {
+			return Provider{}, fmt.Errorf("pick a model for %q", p.Name)
+		}
+		return Provider{Kind: p.Kind, BaseURL: p.BaseURL, APIKey: p.APIKey, Model: model}, nil
+	default: // openai, anthropic
+		if strings.TrimSpace(model) == "" {
+			return Provider{}, fmt.Errorf("pick a model for %q", p.Name)
+		}
+		if strings.TrimSpace(p.BaseURL) == "" {
+			return Provider{}, fmt.Errorf("provider %q has no base URL", p.Name)
+		}
+		return Provider{Kind: p.Kind, BaseURL: p.BaseURL, APIKey: p.APIKey, Model: model}, nil
 	}
-	if strings.TrimSpace(p.BaseURL) == "" {
-		return Provider{}, fmt.Errorf("provider %q has no base URL", p.Name)
-	}
-	return Provider{Kind: p.Kind, BaseURL: p.BaseURL, APIKey: p.APIKey, Model: m.Model, NoStream: p.NoStream}, nil
 }
 
 // Normalize fills in missing provider IDs, trims URLs, and defaults kinds, so
@@ -95,7 +85,7 @@ func Normalize(c Config) Config {
 		p := &c.Providers[i]
 		p.BaseURL = strings.TrimRight(strings.TrimSpace(p.BaseURL), "/")
 		p.Name = strings.TrimSpace(p.Name)
-		if p.Kind != KindOpenAI && p.Kind != KindAnthropic {
+		if !ValidKind(p.Kind) {
 			p.Kind = KindOpenAI
 		}
 		if p.ID == "" || seen[p.ID] {
@@ -103,7 +93,5 @@ func Normalize(c Config) Config {
 		}
 		seen[p.ID] = true
 	}
-	c.Assistant.Model = strings.TrimSpace(c.Assistant.Model)
-	c.Planning.Model = strings.TrimSpace(c.Planning.Model)
 	return c
 }

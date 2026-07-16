@@ -15,6 +15,7 @@ import type {
   AIConfig,
   AIMessage,
   AIProposal,
+  ACPAgent,
   AINamedProvider,
   AuthConfig,
   ScanResult,
@@ -46,6 +47,8 @@ export const GetAIConfig = (): Promise<AIConfig> => app().GetAIConfig()
 
 export const SecretStorageSecure = (): Promise<boolean> => app().SecretStorageSecure()
 
+export const DetectACPAgents = (): Promise<ACPAgent[]> => app().DetectACPAgents()
+
 export const SaveAIConfig = (cfg: AIConfig): Promise<AIConfig> => app().SaveAIConfig(cfg)
 
 export const TestAIConnection = (provider: AINamedProvider, model: string): Promise<string> =>
@@ -57,7 +60,9 @@ export const AIChat = (
   history: AIMessage[],
   bookId: string,
   chapter: string,
-): Promise<void> => app().AIChat(streamId, mode, history, bookId, chapter)
+  providerId: string,
+  model: string,
+): Promise<void> => app().AIChat(streamId, mode, history, bookId, chapter, providerId, model)
 
 export const AICancel = (streamId: string): Promise<void> => app().AICancel(streamId)
 

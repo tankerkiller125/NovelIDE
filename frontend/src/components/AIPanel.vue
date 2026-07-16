@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { AICancel, AIChat } from '../api'
 import {
   activeTabObj,
@@ -22,11 +22,51 @@ const listEl = ref<HTMLElement | null>(null)
 const proposals = computed(() => state.proposals)
 const busyProposal = ref('') // proposal id currently applying, '' when idle
 
+// Per-turn model choice, remembered per mode. Keys are `${providerId}|${model}`.
+const modelChoice = reactive<Record<string, string>>({})
+
+// Every model the user has made available across providers, plus agent providers.
+const availableModels = computed(() => {
+  const opts: { key: string; label: string; providerId: string; model: string }[] = []
+  for (const p of state.settings?.ai?.providers ?? []) {
+    if (p.kind === 'acp' || p.kind === 'a2a') {
+      opts.push({ key: `${p.id}|`, label: p.name, providerId: p.id, model: '' })
+    } else {
+      for (const m of p.models ?? []) {
+        opts.push({ key: `${p.id}|${m}`, label: `${p.name} · ${m}`, providerId: p.id, model: m })
+      }
+    }
+  }
+  return opts
+})
+
+const modelOptions = computed(() => availableModels.value)
+
+const selectedKey = computed<string>({
+  get() {
+    const c = modelChoice[mode.value]
+    if (c && modelOptions.value.some((o) => o.key === c)) return c
+    return modelOptions.value[0]?.key ?? '' // default to the first available model
+  },
+  set(v: string) {
+    modelChoice[mode.value] = v
+  },
+})
+
+const selectedProviderModel = computed(() => {
+  const key = selectedKey.value
+  const i = key.indexOf('|')
+  return i < 0 ? { providerId: key, model: '' } : { providerId: key.slice(0, i), model: key.slice(i + 1) }
+})
+
 const configured = computed(() => {
   const ai = state.settings?.ai
   if (!ai?.enabled) return false
-  const m = mode.value === 'planning' ? ai.planning : ai.assistant
-  return !!(m?.providerId && m?.model)
+  const sel = selectedProviderModel.value
+  const p = (ai.providers ?? []).find((x) => x.id === sel.providerId)
+  if (!p) return false
+  if (p.kind === 'acp' || p.kind === 'a2a') return true
+  return !!sel.model
 })
 
 const activeChapter = computed(() => {
@@ -70,8 +110,9 @@ async function send() {
   const id = crypto.randomUUID()
   streaming.value = id
   scrollToBottom()
+  const sel = selectedProviderModel.value
   try {
-    await AIChat(id, mode.value, history, activeChapter.value.bookId, activeChapter.value.chapter)
+    await AIChat(id, mode.value, history, activeChapter.value.bookId, activeChapter.value.chapter, sel.providerId, sel.model)
   } catch {
     /* errors surface via the ai:error event */
   }
@@ -180,6 +221,11 @@ onUnmounted(() => offs.forEach((off) => off?.()))
       <button class="aip-icon" title="New chat" @click="newChat">🗑</button>
       <button class="aip-icon" title="Close" @click="state.aiPanelOpen = false">✕</button>
     </div>
+    <div v-if="modelOptions.length" class="aip-model">
+      <select v-model="selectedKey" :title="`Model for ${mode}`">
+        <option v-for="o in modelOptions" :key="o.key" :value="o.key">{{ o.label }}</option>
+      </select>
+    </div>
 
     <div ref="listEl" class="aip-msgs">
       <p v-if="!messages.length" class="aip-empty">
@@ -265,6 +311,15 @@ onUnmounted(() => offs.forEach((off) => off?.()))
   gap: 6px;
   padding: 6px 8px;
   border-bottom: 1px solid var(--nv-border);
+}
+.aip-model {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--nv-border);
+}
+.aip-model select {
+  width: 100%;
+  font-size: 11px;
+  padding: 3px 6px;
 }
 .aip-modes {
   display: flex;

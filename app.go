@@ -57,10 +57,6 @@ type App struct {
 	aiMu        sync.Mutex
 	aiStreams   map[string]context.CancelFunc
 	aiProposals map[string]*proposal
-	// aiSessionID is a stable per-process id sent as x-session-affinity so
-	// routing-based prefix caches (Cloudflare Workers AI) keep this app's shared
-	// system+tools+codex prefix hot across turns. Lazily set; guarded by aiMu.
-	aiSessionID string
 }
 
 func NewApp() *App {
@@ -122,29 +118,27 @@ func (a *App) TestAIConnection(p ai.NamedProvider, model string) (string, error)
 	if strings.TrimSpace(model) == "" {
 		return "", fmt.Errorf("choose a model to test")
 	}
-	client, err := ai.New(ai.Provider{
-		Kind:    p.Kind,
-		BaseURL: strings.TrimRight(strings.TrimSpace(p.BaseURL), "/"),
-		APIKey:  p.APIKey,
-		Model:   model,
-	})
-	if err != nil {
-		return "", err
-	}
 	base := a.ctx
 	if base == nil {
 		base = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(base, 45*time.Second)
 	defer cancel()
-	resp, err := client.Stream(ctx, ai.Request{
-		Messages:  []ai.Message{{Role: ai.RoleUser, Content: "Reply with just the word: ok"}},
-		MaxTokens: 16,
-	}, nil)
+
+	ag, err := ai.NewAgent(ctx, ai.Provider{
+		Kind:    p.Kind,
+		BaseURL: strings.TrimRight(strings.TrimSpace(p.BaseURL), "/"),
+		APIKey:  p.APIKey,
+		Model:   model,
+	}, "You are a connection test. Reply with just the word: ok.", nil)
 	if err != nil {
 		return "", err
 	}
-	reply := strings.TrimSpace(resp.Text)
+	resp, err := ag.RunText(ctx, "Reply with just the word: ok").Collect()
+	if err != nil {
+		return "", err
+	}
+	reply := strings.TrimSpace(resp.String())
 	if reply == "" {
 		reply = "connected"
 	}

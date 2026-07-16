@@ -90,10 +90,11 @@ book or chapter to rename or delete it, and NovelIDE keeps every codex timeline
 anchor and plan reference pointing at the right place.
 
 ### 🤝 An optional writing companion — on your terms
-Bring your own AI, or none at all. NovelIDE can connect to any **OpenAI- or
-Anthropic-compatible** model — a cloud provider with your own API key
-(OpenAI, Anthropic, OpenRouter…) or a model running **locally** on your machine
-(Ollama, LM Studio…), with your own base URL and choice of model. It comes in two
+Bring your own AI, or none at all. Built on the **Microsoft Agent Framework**,
+NovelIDE connects to the provider *you* choose — **OpenAI**, **Anthropic**,
+**Google Gemini**, any OpenAI-compatible gateway (OpenRouter, …), a model running
+**locally** on your machine (Ollama, LM Studio…), or a remote **A2A**
+(agent-to-agent) endpoint — with your own key and choice of model. It comes in two
 modes: a **writing assistant** for grounded chat and prose help, and a
 **planning agent** that can search your Codex and manuscript to reason about plot,
 arcs, and continuity. Both are **grounded in your actual world** — they read your
@@ -148,10 +149,9 @@ manuscript anywhere, ever, or trains anything.
 **The optional AI assistant is bring-your-own, opt-in, and approval-gated.**
 - **Off by default.** There is no built-in model and no bundled API key. Nothing
   happens until you open Settings, add a provider, and enable it.
-- **Your provider, your key, your choice.** Connect any OpenAI- or
-  Anthropic-compatible endpoint — a cloud service (OpenAI, Anthropic,
-  OpenRouter…) or a **local** model such as Ollama that keeps everything on your
-  machine.
+- **Your provider, your key, your choice.** Connect OpenAI, Anthropic, Google
+  Gemini, any OpenAI-compatible endpoint (OpenRouter…), a **local** model such as
+  Ollama that keeps everything on your machine, or a remote **A2A** agent.
 - **It leaves your machine only when you use it, and only to where you point it.**
   When you send a message, the context that message needs — the instructions, your
   Codex, the open chapter, and your conversation — is sent to the provider *you*

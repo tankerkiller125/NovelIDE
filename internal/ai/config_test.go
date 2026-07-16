@@ -2,17 +2,16 @@ package ai
 
 import "testing"
 
-func TestConfigNormalizeAndResolve(t *testing.T) {
+func TestConfigNormalize(t *testing.T) {
 	cfg := Config{
 		Providers: []NamedProvider{
 			{Name: "OpenAI", Kind: KindOpenAI, BaseURL: "https://api.openai.com/v1/"},
 			{Name: "Local", Kind: "weird", BaseURL: "http://localhost:11434/v1"},
 		},
-		Assistant: ModeConfig{Model: " gpt-4o "},
 	}
 	cfg = Normalize(cfg)
 
-	// IDs filled, URL trimmed, bad kind defaulted, model trimmed.
+	// IDs filled, URL trimmed, bad kind defaulted.
 	if cfg.Providers[0].ID == "" || cfg.Providers[1].ID == "" {
 		t.Fatal("provider IDs not generated")
 	}
@@ -22,30 +21,31 @@ func TestConfigNormalizeAndResolve(t *testing.T) {
 	if cfg.Providers[1].Kind != KindOpenAI {
 		t.Errorf("bad kind not defaulted: %q", cfg.Providers[1].Kind)
 	}
-	if cfg.Assistant.Model != "gpt-4o" {
-		t.Errorf("model not trimmed: %q", cfg.Assistant.Model)
+}
+
+func TestResolveModelByKind(t *testing.T) {
+	cfg := Config{Providers: []NamedProvider{
+		{ID: "oa", Name: "OpenAI", Kind: KindOpenAI, BaseURL: "https://api.openai.com/v1"},
+		{ID: "cc", Name: "Claude Code", Kind: KindACP, BaseURL: "claude-code"},
+	}}
+
+	// OpenAI wires the chosen model onto the provider.
+	p, err := cfg.ResolveModel("oa", "gpt-4o-mini")
+	if err != nil || p.Kind != KindOpenAI || p.Model != "gpt-4o-mini" || p.BaseURL != "https://api.openai.com/v1" {
+		t.Fatalf("openai resolve: %+v err=%v", p, err)
 	}
 
-	// Resolve wires the chosen model onto the referenced provider.
-	cfg.Assistant.ProviderID = cfg.Providers[0].ID
-	p, err := cfg.Resolve(cfg.Assistant)
-	if err != nil {
-		t.Fatal(err)
+	// OpenAI needs a model; ACP resolves with none (agent id lives in BaseURL).
+	if _, err := cfg.ResolveModel("oa", ""); err == nil {
+		t.Error("openai without a model should error")
 	}
-	if p.Kind != KindOpenAI || p.Model != "gpt-4o" || p.BaseURL != "https://api.openai.com/v1" {
-		t.Errorf("resolved wrong: %+v", p)
+	p, err = cfg.ResolveModel("cc", "")
+	if err != nil || p.Kind != KindACP || p.BaseURL != "claude-code" {
+		t.Errorf("acp resolve: %+v err=%v", p, err)
 	}
 
-	// Missing provider / model error out.
-	if _, err := cfg.Resolve(ModeConfig{ProviderID: "nope", Model: "x"}); err == nil {
+	// Unknown provider errors.
+	if _, err := cfg.ResolveModel("nope", "x"); err == nil {
 		t.Error("unknown provider should error")
-	}
-	if _, err := cfg.Resolve(ModeConfig{ProviderID: cfg.Providers[0].ID}); err == nil {
-		t.Error("missing model should error")
-	}
-
-	// Budgeting defaults.
-	if cfg.Planning.ContextWindow() != DefaultContextTokens || cfg.Planning.OutputReserve() != DefaultMaxOutputTokens {
-		t.Error("mode budgeting defaults wrong")
 	}
 }

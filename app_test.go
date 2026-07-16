@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/microsoft/agent-framework-go/tool"
+
 	"novelide/internal/ai"
 	"novelide/internal/model"
 	"testing"
@@ -244,35 +246,26 @@ func TestProseProposalFullCycle(t *testing.T) {
 }
 
 func TestWriteToolsPerMode(t *testing.T) {
-	names := func(ts []ai.Tool) map[string]bool {
+	a := &App{}
+	names := func(ts []tool.Tool) map[string]bool {
 		m := map[string]bool{}
 		for _, x := range ts {
-			m[x.Name] = true
+			m[x.Name()] = true
 		}
 		return m
 	}
-	asst := names(writeTools("assistant"))
+	// Assistant mode registers prose edits only; planning also gets codex/plan.
+	asst := names(a.writeTools("s1", "assistant"))
 	if !asst["propose_prose_edit"] || len(asst) != 1 {
 		t.Errorf("assistant should offer prose edits only, got %v", asst)
 	}
-	plan := names(writeTools("planning"))
+	plan := names(a.writeTools("s1", "planning"))
 	if !plan["propose_prose_edit"] || !plan["propose_codex_edit"] || !plan["propose_plan_edit"] {
 		t.Errorf("planning should offer all write tools, got %v", plan)
 	}
-
-	// Gating: prose allowed everywhere; codex/plan planning-only.
-	if !writeToolAllowed("assistant", "propose_prose_edit") || writeToolAllowed("assistant", "propose_codex_edit") {
-		t.Error("assistant gating wrong")
-	}
-	if !writeToolAllowed("planning", "propose_codex_edit") {
-		t.Error("planning should allow codex edits")
-	}
-
-	// The executor rejects a disallowed write tool in assistant mode.
-	a := &App{ws: &model.Workspace{}}
-	exec := a.toolExecutor("s1", "assistant")
-	if got := exec(ai.ToolCall{Name: "propose_codex_edit", Arguments: "{}"}); !strings.Contains(got, "isn't available") {
-		t.Errorf("assistant should reject codex proposals: %s", got)
+	// Read tools are the same in both modes.
+	if n := len(a.readTools()); n != 5 {
+		t.Errorf("expected 5 read tools, got %d", n)
 	}
 }
 

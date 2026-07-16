@@ -90,32 +90,29 @@ export interface AuthConfig {
 }
 
 // --- optional AI configuration ---
-export type AIProviderKind = 'openai' | 'anthropic'
+export type AIProviderKind = 'openai' | 'anthropic' | 'gemini' | 'a2a' | 'acp'
+
+/** A locally-installed ACP coding agent detected on this machine. */
+export interface ACPAgent {
+  id: string
+  label: string
+}
 
 export interface AINamedProvider {
   id: string
   name: string
   kind: AIProviderKind
+  /** OpenAI-compatible base URL, Anthropic host, or (for a2a) the remote agent's
+   *  card URL. Not used for gemini. */
   baseUrl: string
   apiKey: string
-  /** Disable SSE streaming (send stream:false). For gateways whose streaming is
-   *  broken — e.g. Cloudflare's OpenAI-compat endpoint serving Claude. */
-  noStream?: boolean
-}
-
-export interface AIModeConfig {
-  providerId: string
-  model: string
-  contextTokens: number
-  maxOutputTokens: number
-  temperature: number
+  /** Model ids to offer in the chat model picker (openai/anthropic/gemini). */
+  models?: string[]
 }
 
 export interface AIConfig {
   enabled: boolean
   providers: AINamedProvider[] | null
-  assistant: AIModeConfig
-  planning: AIModeConfig
 }
 
 /** One chat turn sent to the AI runtime. */

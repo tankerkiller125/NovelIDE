@@ -100,12 +100,7 @@ async function save() {
       syncAccountId: state.settings?.syncAccountId ?? '',
       // Round-trip AI config (managed by the AI section) so a general save
       // doesn't wipe it.
-      ai: state.settings?.ai ?? {
-        enabled: false,
-        providers: [],
-        assistant: { providerId: '', model: '', contextTokens: 0, maxOutputTokens: 0, temperature: 0 },
-        planning: { providerId: '', model: '', contextTokens: 0, maxOutputTokens: 0, temperature: 0 },
-      },
+      ai: state.settings?.ai ?? { enabled: false, providers: [] },
       recent: state.settings?.recent ?? [],
     })
     message.value = 'Saved.'

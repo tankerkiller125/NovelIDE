@@ -1,27 +1,34 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { GetAIConfig, SaveAIConfig, SecretStorageSecure, TestAIConnection } from '../api'
+import {
+  DetectACPAgents,
+  GetAIConfig,
+  SaveAIConfig,
+  SecretStorageSecure,
+  TestAIConnection,
+} from '../api'
 import { state } from '../store'
-import type { AIConfig, AIModeConfig, AINamedProvider, AIProviderKind } from '../types'
+import type { ACPAgent, AIConfig, AINamedProvider, AIProviderKind } from '../types'
 
 const cfg = ref<AIConfig>(blankConfig())
 const busy = ref(false)
 const message = ref('')
 const error = ref('')
-const testing = ref<'assistant' | 'planning' | ''>('')
-const testResult = ref<{ mode: string; ok: boolean; text: string } | null>(null)
+const testingId = ref('') // provider id currently being tested
+const testResult = ref<{ id: string; ok: boolean; text: string } | null>(null)
 const secureStorage = ref(true)
+const acpAgents = ref<ACPAgent[]>([])
 
 const DEFAULT_URL: Record<AIProviderKind, string> = {
   openai: 'https://api.openai.com/v1',
   anthropic: 'https://api.anthropic.com',
+  gemini: '',
+  a2a: '',
+  acp: '',
 }
 
-function blankMode(): AIModeConfig {
-  return { providerId: '', model: '', contextTokens: 0, maxOutputTokens: 0, temperature: 0 }
-}
 function blankConfig(): AIConfig {
-  return { enabled: false, providers: [], assistant: blankMode(), planning: blankMode() }
+  return { enabled: false, providers: [] }
 }
 
 onMounted(async () => {
@@ -29,6 +36,7 @@ onMounted(async () => {
     const c = await GetAIConfig()
     cfg.value = { ...c, providers: c.providers ?? [] }
     secureStorage.value = await SecretStorageSecure()
+    acpAgents.value = (await DetectACPAgents()) ?? []
   } catch (e) {
     error.value = String(e)
   }
@@ -45,13 +53,15 @@ function addProvider() {
   })
 }
 function removeProvider(i: number) {
-  const removed = cfg.value.providers?.[i]
   cfg.value.providers?.splice(i, 1)
-  // Clear mode references to a deleted provider.
-  for (const m of [cfg.value.assistant, cfg.value.planning]) {
-    if (removed && m.providerId === removed.id) m.providerId = ''
-  }
 }
+function setModels(p: AINamedProvider, value: string) {
+  p.models = value
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
 function onKindChange(p: AINamedProvider) {
   // If the URL was still the other kind's default, switch it too.
   if (p.baseUrl === '' || p.baseUrl === DEFAULT_URL.openai || p.baseUrl === DEFAULT_URL.anthropic) {
@@ -76,22 +86,22 @@ async function save() {
   }
 }
 
-async function test(mode: 'assistant' | 'planning') {
-  const m = cfg.value[mode]
-  const provider = (cfg.value.providers ?? []).find((p) => p.id === m.providerId)
-  if (!provider) {
-    testResult.value = { mode, ok: false, text: 'Pick a provider first.' }
+// test verifies a provider works, using its first configured model.
+async function test(p: AINamedProvider) {
+  const model = p.models?.[0] ?? ''
+  if (!model) {
+    testResult.value = { id: p.id, ok: false, text: 'Add a model first.' }
     return
   }
-  testing.value = mode
+  testingId.value = p.id
   testResult.value = null
   try {
-    const reply = await TestAIConnection(provider, m.model)
-    testResult.value = { mode, ok: true, text: `OK — “${reply}”` }
+    const reply = await TestAIConnection(p, model)
+    testResult.value = { id: p.id, ok: true, text: `OK — “${reply}”` }
   } catch (e) {
-    testResult.value = { mode, ok: false, text: String(e) }
+    testResult.value = { id: p.id, ok: false, text: String(e) }
   } finally {
-    testing.value = ''
+    testingId.value = ''
   }
 }
 </script>
@@ -100,9 +110,10 @@ async function test(mode: 'assistant' | 'planning') {
   <section class="ai">
     <h3>AI <span class="ai-optional">optional</span></h3>
     <p class="hint">
-      Connect any OpenAI- or Anthropic-compatible provider (OpenAI, Anthropic, Ollama, OpenRouter,
-      a self-hosted endpoint…). Configure a provider once, then pick a model for each mode. All AI
-      is off unless you enable it below. Keys are stored in your local settings file.
+      Connect OpenAI, Anthropic, Google Gemini, any OpenAI-compatible gateway, a local model, or an
+      agent (A2A / a local coding CLI). List the models you want on each provider — then choose any of
+      them for the assistant or planning agent from the model picker while chatting. All AI is off
+      unless you enable it below.
     </p>
 
     <p v-if="error" class="ai-error">{{ error }}</p>
@@ -133,56 +144,71 @@ async function test(mode: 'assistant' | 'planning') {
           <select v-model="p.kind" class="ai-kind" @change="onKindChange(p)">
             <option value="openai">OpenAI-compatible</option>
             <option value="anthropic">Anthropic</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="a2a">A2A agent</option>
+            <option value="acp">Local agent (ACP)</option>
           </select>
           <button class="btn icon" title="Remove" @click="removeProvider(i)">✕</button>
         </div>
-        <div class="ai-row">
-          <input v-model="p.baseUrl" placeholder="Base URL" class="ai-url" />
-          <input v-model="p.apiKey" type="password" placeholder="API key" class="ai-key" autocomplete="off" />
-        </div>
-        <label class="ai-check" title="Send the whole reply at once instead of token-by-token. Turn on if streaming returns nothing (e.g. Cloudflare's OpenAI gateway with Claude).">
-          <input type="checkbox" v-model="p.noStream" />
-          Disable streaming (request full reply in one response)
-        </label>
-      </div>
-    </div>
 
-    <!-- Modes -->
-    <div v-for="mode in (['assistant', 'planning'] as const)" :key="mode" class="ai-sub">
-      <div class="ai-sub-head">
-        <h4>{{ mode === 'assistant' ? 'Writing assistant' : 'Planning (agent)' }}</h4>
-        <button class="btn mini" :disabled="testing === mode" @click="test(mode)">
-          {{ testing === mode ? 'Testing…' : 'Test' }}
-        </button>
+        <!-- ACP: pick a detected local coding agent instead of a URL/key -->
+        <template v-if="p.kind === 'acp'">
+          <div class="ai-row">
+            <select v-model="p.baseUrl" class="ai-provsel">
+              <option value="">— installed agent —</option>
+              <option v-for="ag in acpAgents" :key="ag.id" :value="ag.id">{{ ag.label }}</option>
+            </select>
+          </div>
+          <p class="hint ai-keynote">
+            <template v-if="acpAgents.length">
+              Runs a coding agent installed on your machine (via the Agent Client Protocol). It reads your manuscript
+              and its edits come back as proposals you approve. The model/mode settings below don't apply.
+            </template>
+            <template v-else>
+              No supported ACP agents detected on your PATH. Install one (e.g. the Gemini CLI, or Node for Claude
+              Code) and reopen Settings.
+            </template>
+          </p>
+        </template>
+
+        <template v-else>
+          <div class="ai-row">
+            <input
+              v-model="p.baseUrl"
+              :placeholder="p.kind === 'a2a' ? 'Agent card URL' : p.kind === 'gemini' ? 'Base URL (optional)' : 'Base URL'"
+              class="ai-url"
+            />
+            <input
+              v-if="p.kind !== 'a2a'"
+              v-model="p.apiKey"
+              type="password"
+              placeholder="API key"
+              class="ai-key"
+              autocomplete="off"
+            />
+          </div>
+          <div v-if="p.kind !== 'a2a'" class="ai-row">
+            <input
+              :value="(p.models ?? []).join(', ')"
+              placeholder="Models for the chat picker (comma-separated, e.g. gpt-4o, gpt-4o-mini)"
+              class="ai-url"
+              @change="setModels(p, ($event.target as HTMLInputElement).value)"
+            />
+          </div>
+          <div v-if="p.kind !== 'a2a'" class="ai-row ai-test-row">
+            <button class="btn mini" :disabled="testingId === p.id" @click="test(p)">
+              {{ testingId === p.id ? 'Testing…' : 'Test' }}
+            </button>
+            <span v-if="testResult && testResult.id === p.id" class="ai-test" :class="{ bad: !testResult.ok }">
+              {{ testResult.text }}
+            </span>
+          </div>
+          <p v-if="p.kind === 'a2a'" class="hint ai-keynote">
+            Connects to a local or remote A2A agent by its card URL (use an <code>http://</code> URL for a plaintext
+            agent on your machine). It runs its own model and tools, so the model setting doesn't apply.
+          </p>
+        </template>
       </div>
-      <p class="hint">
-        {{
-          mode === 'assistant'
-            ? 'Grounded chat and prose help.'
-            : 'Agentic planning with tools (proposes changes for your approval).'
-        }}
-      </p>
-      <div class="ai-row">
-        <select v-model="cfg[mode].providerId" class="ai-provsel">
-          <option value="">— provider —</option>
-          <option v-for="p in cfg.providers ?? []" :key="p.id" :value="p.id">{{ p.name }}</option>
-        </select>
-        <input v-model="cfg[mode].model" placeholder="Model (e.g. gpt-4o, claude-sonnet-5, llama3.1)" class="ai-model" />
-      </div>
-      <div class="ai-row ai-budget">
-        <label>Context tokens
-          <input type="number" v-model.number="cfg[mode].contextTokens" placeholder="8192" min="0" />
-        </label>
-        <label>Max reply tokens
-          <input type="number" v-model.number="cfg[mode].maxOutputTokens" placeholder="2048" min="0" />
-        </label>
-        <label>Temperature
-          <input type="number" v-model.number="cfg[mode].temperature" step="0.1" min="0" max="2" />
-        </label>
-      </div>
-      <p v-if="testResult && testResult.mode === mode" class="ai-test" :class="{ bad: !testResult.ok }">
-        {{ testResult.text }}
-      </p>
     </div>
 
     <div class="ai-actions">
